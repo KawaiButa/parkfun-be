@@ -1,15 +1,15 @@
 import { Injectable } from "@nestjs/common";
-import { Account } from "src/account/entities/account.entity";
-import { BcryptHashProvider } from "src/hash/providers/hash.provider";
+import { User } from "src/auth/entities/user.entity";
+import { BcryptHashProvider } from "src/auth/providers/hash.provider";
 import { EntitySubscriberInterface, EventSubscriber, InsertEvent, UpdateEvent } from "typeorm";
 
 @EventSubscriber()
 @Injectable()
-export class RegisterSubcriber implements EntitySubscriberInterface<Account> {
+export class RegisterSubcriber implements EntitySubscriberInterface<User> {
   listenTo() {
-    return Account;
+    return User;
   }
-  async beforeInsert({ entity }: InsertEvent<Account>): Promise<void> {
+  async beforeInsert({ entity }: InsertEvent<User>): Promise<void> {
     if (entity.password) {
       entity.password = await BcryptHashProvider.hash(entity.password);
     }
@@ -19,7 +19,7 @@ export class RegisterSubcriber implements EntitySubscriberInterface<Account> {
     }
   }
 
-  async beforeUpdate({ entity, databaseEntity }: UpdateEvent<Account>): Promise<void> {
+  async beforeUpdate({ entity, databaseEntity }: UpdateEvent<User>): Promise<void> {
     if (entity.password) {
       const password = await BcryptHashProvider.hash(entity.password);
 

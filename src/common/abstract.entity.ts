@@ -3,13 +3,11 @@ import {
   Column,
   CreateDateColumn,
   DeleteDateColumn,
-  Entity,
   Generated,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
 
-@Entity({ name: "abstract" })
 export class AbstractEntity {
   @PrimaryGeneratedColumn()
   @Exclude()
