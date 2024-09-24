@@ -1,5 +1,6 @@
 import { registerAs } from "@nestjs/config";
 import { config as dotenvConfig } from "dotenv";
+import { RegisterSubcriber } from "src/register/subcribers/register.subcriber";
 import { DataSource, DataSourceOptions } from "typeorm";
 
 dotenvConfig({ path: ".env" });
@@ -15,6 +16,7 @@ const config = {
   migrations: ["dist/migrations/*{.ts,.js}"],
   autoLoadEntities: true,
   synchronize: process.env.IS_PRODUCTION == "false",
+  subscribers: [RegisterSubcriber],
 };
 console.log(config);
 export default registerAs("typeorm", () => config);

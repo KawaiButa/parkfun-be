@@ -2,6 +2,7 @@ import { Module } from "@nestjs/common";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { join } from "path";
 import * as dotenv from "dotenv";
+import { RegisterSubcriber } from "src/register/subcribers/register.subcriber";
 
 dotenv.config({ path: ".local.env" });
 @Module({
@@ -18,6 +19,7 @@ dotenv.config({ path: ".local.env" });
       synchronize: process.env.IS_PRODUCTION == "false",
       migrationsRun: true,
       logging: true,
+      subscribers: [RegisterSubcriber],
     }),
   ],
 })

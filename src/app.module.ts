@@ -1,9 +1,8 @@
 import { Module } from "@nestjs/common";
 import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
-import { AuthModule } from "./auth/auth.module";
 import { TypeOrmModule } from "@nestjs/typeorm";
-import { SignupModule } from "./signup/signup.module";
+import { registerModule } from "./register/register.module";
 import { AccountModule } from "./account/account.module";
 import { ConfigModule, ConfigService } from "@nestjs/config";
 import { DatabaseModule } from "./database/database.module";
@@ -19,8 +18,7 @@ import typeormConfig from "./config/typeormConfig";
       useFactory: async (configService: ConfigService) => configService.get("typeorm"),
     }),
     DatabaseModule,
-    AuthModule,
-    SignupModule,
+    registerModule,
     AccountModule,
   ],
   controllers: [AppController],
