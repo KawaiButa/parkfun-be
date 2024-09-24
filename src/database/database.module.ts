@@ -4,7 +4,7 @@ import { join } from "path";
 import * as dotenv from "dotenv";
 import { RegisterSubcriber } from "src/register/subcribers/register.subcriber";
 
-dotenv.config({ path: ".local.env" });
+dotenv.config({ path: ".env" });
 @Module({
   imports: [
     TypeOrmModule.forRoot({
