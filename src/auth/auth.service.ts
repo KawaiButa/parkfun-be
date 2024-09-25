@@ -23,8 +23,8 @@ export class AuthService {
     if (!isMatch) {
       throw new UnauthorizedException("Invalid email or password");
     }
-    const token = this.jwtService.sign({ id: user.id });
-    return { token };
+    const accessToken = this.jwtService.sign({ id: user.id });
+    return { accessToken };
   }
 
   async register(signUpDto: SignUpDto) {
@@ -36,7 +36,7 @@ export class AuthService {
       password: hashedPassword,
     });
     await this.userRepository.save(user);
-    const token = this.jwtService.sign({ id: user.id });
-    return { token };
+    const accessToken = this.jwtService.sign({ id: user.id });
+    return { accessToken };
   }
 }
