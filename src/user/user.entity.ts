@@ -10,13 +10,13 @@ export class User {
   @IsEmail()
   @IsNotEmpty()
   @Column()
+  @Column({ unique: true })
   email: string;
 
   @IsString()
-  @IsNotEmpty()
   @Exclude()
-  @Column({ unique: true })
-  password: string;
+  @Column({ nullable: true })
+  password?: string;
 
   @IsString()
   @IsAlpha()
