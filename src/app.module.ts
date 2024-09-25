@@ -1,27 +1,24 @@
 import { Module } from "@nestjs/common";
 import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
-import { AuthModule } from "./auth/auth.module";
-import { TypeOrmModule } from "@nestjs/typeorm";
-import { SignupModule } from "./signup/signup.module";
-import { AccountModule } from "./account/account.module";
-import { ConfigModule, ConfigService } from "@nestjs/config";
+import { ConfigModule } from "@nestjs/config";
+import * as Joi from "@hapi/joi";
 import { DatabaseModule } from "./database/database.module";
-import typeormConfig from "./config/typeormConfig";
+import { AuthModule } from "./auth/auth.module";
 @Module({
   imports: [
     ConfigModule.forRoot({
-      isGlobal: true,
-      load: [typeormConfig],
-    }),
-    TypeOrmModule.forRootAsync({
-      inject: [ConfigService],
-      useFactory: async (configService: ConfigService) => configService.get("typeorm"),
+      validationSchema: Joi.object({
+        DB_HOST: Joi.string().required(),
+        DB_PORT: Joi.number().required(),
+        DB_USER: Joi.string().required(),
+        DB_PASSWORD: Joi.string().required(),
+        DB_NAME: Joi.string().required(),
+        PORT: Joi.number(),
+      }),
     }),
     DatabaseModule,
     AuthModule,
-    SignupModule,
-    AccountModule,
   ],
   controllers: [AppController],
   providers: [AppService],
