@@ -1,23 +1,22 @@
 import { Module } from "@nestjs/common";
 import { TypeOrmModule } from "@nestjs/typeorm";
-import { join } from "path";
-import * as dotenv from "dotenv";
+import { ConfigModule, ConfigService } from "@nestjs/config";
 
-dotenv.config({ path: ".local.env" });
 @Module({
   imports: [
-    TypeOrmModule.forRoot({
-      type: "postgres",
-      host: process.env.DB_HOST || "localhost",
-      port: parseInt(process.env.DB_PORT) || 5432,
-      username: process.env.DB_USER,
-      password: process.env.DB_PASSWORD,
-      database: process.env.DB_NAME,
-      entities: [join(__dirname, "**", "*.entity.{ts,js}")],
-      migrations: [join(__dirname, "**", "*.migrations.{ts,js}")],
-      synchronize: process.env.IS_PRODUCTION == "false",
-      migrationsRun: true,
-      logging: true,
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        type: "postgres",
+        host: configService.get("DB_HOST"),
+        port: configService.get("DB_PORT"),
+        username: configService.get("DB_USER"),
+        password: configService.get("DB_PASSWORD"),
+        database: configService.get("DB_NAME"),
+        entities: [__dirname + "/../**/*.entity.{js,ts}"],
+        synchronize: true,
+      }),
     }),
   ],
 })
