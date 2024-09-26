@@ -15,6 +15,7 @@ import { LoginDto } from "./dtos/login.dto";
 import { google, Auth } from "googleapis";
 import { LoginWithGoogleDto } from "./dtos/loginWithGoogle.dto";
 import { ConfigService } from "@nestjs/config";
+import { UserService } from "src/user/user.service";
 
 @Injectable()
 export class AuthService {
@@ -22,6 +23,7 @@ export class AuthService {
   constructor(
     @InjectRepository(User) private userRepository: Repository<User>,
     private jwtService: JwtService,
+    private userService: UserService,
     private configService: ConfigService
   ) {
     const clientID = this.configService.get("GOOGLE_AUTH_CLIENT_ID");
@@ -38,8 +40,8 @@ export class AuthService {
     if (!isMatch) {
       throw new UnauthorizedException("Invalid email or password");
     }
-    const accessToken = this.jwtService.sign({ id: user.id });
-    return { accessToken };
+    const accessToken = this.jwtService.sign({ id: user.id, email: user.email });
+    return { accessToken, user };
   }
 
   async register(signUpDto: SignUpDto) {
@@ -49,9 +51,9 @@ export class AuthService {
     if (isExisted) {
       throw new ConflictException("Email already exists");
     }
-    const user = await this.createUser({ name, email, password: hashedPassword });
-    const accessToken = this.jwtService.sign({ id: user.id });
-    return { accessToken };
+    const user = await this.userService.createUser({ name, email, password: hashedPassword });
+    const accessToken = this.jwtService.sign({ id: user.id, email: user.email });
+    return { accessToken, user };
   }
   async loginWithGoogle(@Body() loginWithGoogleDto: LoginWithGoogleDto) {
     const { credential, clientId } = loginWithGoogleDto;
@@ -61,24 +63,15 @@ export class AuthService {
         if (err.message) {
           throw new UnauthorizedException("Invalid credentials");
         }
-
         throw new InternalServerErrorException();
       });
-    const { email, name } = authResult.getPayload();
+    const { email, name, iss } = authResult.getPayload();
+    const hashedPassword = bcrypt.hashSync(iss, 10);
     let user = await this.userRepository.findOneBy({ email });
     if (!user) {
-      user = await this.createUser({ name, email, password: null });
+      user = await this.userService.createUser({ name, email, password: hashedPassword });
     }
-    const accessToken = this.jwtService.sign({ id: user.id });
-    return { accessToken };
-  }
-
-  async createUser({ name, email, password }: { name: string; email: string; password: string }): Promise<User> {
-    const user = await this.userRepository.create({
-      name,
-      email,
-      password,
-    });
-    return await this.userRepository.save(user);
+    const accessToken = this.jwtService.sign({ id: user.id, email: user.email });
+    return { accessToken, user };
   }
 }
