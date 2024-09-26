@@ -45,13 +45,16 @@ export class AuthService {
   }
 
   async register(signUpDto: SignUpDto) {
-    const { password, email, name } = signUpDto;
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const isExisted = await this.userRepository.countBy({ email });
-    if (isExisted) {
-      throw new ConflictException("Email already exists");
+    const { password, email, name, confirmPassword, phoneNumber } = signUpDto;
+    if (password !== confirmPassword) {
+      throw new ConflictException("Password and confirmPassword do not match");
     }
-    const user = await this.userService.createUser({ name, email, password: hashedPassword });
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const isExisted = await this.userRepository.countBy({ email, phoneNumber });
+    if (isExisted) {
+      throw new ConflictException("An account registered with email or password has already exists");
+    }
+    const user = await this.userService.createUser({ name, email, password: hashedPassword, phoneNumber });
     const accessToken = this.jwtService.sign({ id: user.id, email: user.email });
     return { accessToken, user };
   }

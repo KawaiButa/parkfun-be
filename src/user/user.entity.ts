@@ -15,12 +15,16 @@ export class User {
 
   @IsString()
   @Exclude()
-  @Column({ nullable: true })
-  password?: string;
+  @Column()
+  password: string;
 
   @IsString()
   @IsAlpha()
   @IsNotEmpty()
   @Column()
   name: string;
+
+  @IsString()
+  @Column({ nullable: true, unique: true })
+  phoneNumber: string;
 }
