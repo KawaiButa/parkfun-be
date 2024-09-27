@@ -1,4 +1,4 @@
-import { IsAlpha, IsEmail, IsNotEmpty, IsString } from "class-validator";
+import { IsAlpha, IsEmail, IsNotEmpty, IsNumberString, IsString, ValidateIf } from "class-validator";
 
 export class SignUpDto {
   @IsEmail()
@@ -10,7 +10,15 @@ export class SignUpDto {
   password: string;
 
   @IsString()
+  @IsNotEmpty()
+  confirmPassword: string;
+
+  @IsString()
   @IsAlpha()
   @IsNotEmpty()
   name: string;
+
+  @ValidateIf((value) => !!value.phoneNumber)
+  @IsNumberString()
+  phoneNumber?: string;
 }

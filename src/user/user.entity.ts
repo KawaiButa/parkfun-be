@@ -10,12 +10,12 @@ export class User {
   @IsEmail()
   @IsNotEmpty()
   @Column()
+  @Column({ unique: true })
   email: string;
 
   @IsString()
-  @IsNotEmpty()
   @Exclude()
-  @Column({ unique: true })
+  @Column()
   password: string;
 
   @IsString()
@@ -23,4 +23,8 @@ export class User {
   @IsNotEmpty()
   @Column()
   name: string;
+
+  @IsString()
+  @Column({ nullable: true, unique: true })
+  phoneNumber: string;
 }
