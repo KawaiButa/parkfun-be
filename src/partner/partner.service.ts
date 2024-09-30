@@ -58,11 +58,13 @@ export class PartnerService {
     await queryRunner.connect();
     queryRunner.startTransaction();
     try {
-      const result = await this.partnerRepository.delete(id);
-      if (!result.affected) throw new NotFoundException("Partner not found");
       if (deleteUser) {
         await this.userService.delete(partner.user.id);
+      } else {
+        await this.userService.update(partner.user.id, { partner: null });
       }
+      const result = await this.partnerRepository.delete(id);
+      if (!result.affected) throw new NotFoundException("Partner not found");
       return "Successfully delete partner";
     } catch (e) {
       await queryRunner.rollbackTransaction();
