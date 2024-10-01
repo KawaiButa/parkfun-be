@@ -1,15 +1,5 @@
-import { ParkingLocation } from "src/parkinglocation/parkingLocation.entity";
 import { User } from "src/user/user.entity";
-import {
-  Column,
-  CreateDateColumn,
-  DeleteDateColumn,
-  Entity,
-  JoinColumn,
-  ManyToOne,
-  OneToOne,
-  PrimaryGeneratedColumn,
-} from "typeorm";
+import { Column, CreateDateColumn, DeleteDateColumn, Entity, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity()
 export class Image {
@@ -18,10 +8,6 @@ export class Image {
 
   @Column()
   url: string;
-
-  @ManyToOne(() => ParkingLocation, (parkingLocation) => parkingLocation.images)
-  @JoinColumn()
-  parkingLocation?: ParkingLocation;
 
   @OneToOne(() => User, (user) => user.image)
   user: User;
