@@ -7,7 +7,7 @@ import {
 } from "@nestjs/common";
 import { SignUpDto } from "./dtos/signup.dto";
 import { InjectRepository } from "@nestjs/typeorm";
-import { EntityNotFoundError, Repository } from "typeorm";
+import { Repository } from "typeorm";
 import * as bcrypt from "bcrypt";
 import { User } from "src/user/user.entity";
 import { JwtService } from "@nestjs/jwt";
@@ -32,25 +32,22 @@ export class AuthService {
   }
   async login(loginDto: LoginDto) {
     const { email, password } = loginDto;
-    try {
-      const user = await this.userRepository.findOne({
-        where: { email },
-        relations: {
-          role: true,
-        },
-      });
-      const isMatch = await bcrypt.compare(password, user.password);
-      if (!isMatch) {
-        throw new UnauthorizedException("Invalid email or password");
-      }
-      const accessToken = this.jwtService.sign({ id: user.id, email: user.email, role: user.role.name });
-      return { accessToken, user };
-    } catch (err) {
-      if (err instanceof EntityNotFoundError) {
-        throw new UnauthorizedException("Invalid email or password");
-      }
-      throw err;
+    const user = await this.userRepository.findOne({
+      where: { email },
+      relations: {
+        partner: true,
+        role: true,
+      },
+    });
+    if (!user) {
+      throw new UnauthorizedException("Invalid email or password");
     }
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      throw new UnauthorizedException("Invalid email or password");
+    }
+    const accessToken = this.jwtService.sign({ id: user.id, email: user.email, role: user.role.name });
+    return { accessToken, user };
   }
 
   async register(signUpDto: SignUpDto) {
