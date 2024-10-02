@@ -8,7 +8,6 @@ import { User } from "src/user/user.entity";
 import { JWTStrategy } from "./jwt.strategy";
 import { PassportModule } from "@nestjs/passport";
 import { UserModule } from "src/user/user.module";
-import { UserService } from "src/user/user.service";
 import { RoleModule } from "src/role/role.module";
 
 @Module({
@@ -31,6 +30,6 @@ import { RoleModule } from "src/role/role.module";
     RoleModule,
   ],
   controllers: [AuthController, JWTStrategy],
-  providers: [AuthService, JWTStrategy, PassportModule, ConfigService, UserService],
+  providers: [AuthService, JWTStrategy, PassportModule, ConfigService],
 })
 export class AuthModule {}

@@ -1,25 +1,27 @@
 import { BadRequestException, ConflictException, Injectable, NotFoundException } from "@nestjs/common";
 import { User } from "./user.entity";
-import * as bcypt from "bcrypt";
 import { DataSource, Repository } from "typeorm";
 import { InjectRepository } from "@nestjs/typeorm";
 import { CreateUserDto } from "./dtos/createUser.dto";
 import { RoleService } from "src/role/role.service";
+import { ImageService } from "src/image/image.service";
+import { constant } from "src/constant";
 
 @Injectable()
 export class UserService {
   constructor(
     @InjectRepository(User) private userRepository: Repository<User>,
     private roleService: RoleService,
+    private imageService: ImageService,
     private dataSource: DataSource
   ) {}
   async create(createUserDto: CreateUserDto): Promise<User> {
-    const { password, email, role, phoneNumber } = createUserDto;
+    const { email, role, phoneNumber, image } = createUserDto;
     const roleEntity = await this.roleService.getOneBy({ name: role });
+    const imageEntity = await this.imageService.create({ url: image ?? constant.DEFAULT_AVATAR_URL });
     if (!roleEntity) {
       throw new BadRequestException("Role does not exist");
     }
-    const hashedPassword = await bcypt.hash(password, 10);
     const isExisted = await this.userRepository.findOne({
       where: [
         {
@@ -39,7 +41,7 @@ export class UserService {
     queryRunner.connect();
     queryRunner.startTransaction();
     try {
-      const user = this.userRepository.create({ ...createUserDto, password: hashedPassword, role: roleEntity });
+      const user = this.userRepository.create({ ...createUserDto, image: imageEntity, role: roleEntity });
       await this.userRepository.save(user);
       return user;
     } catch (err) {
@@ -72,5 +74,13 @@ export class UserService {
     if (!result.affected) throw new NotFoundException("Cannot find the user");
     const user = await this.userRepository.findOneBy({ id });
     return user;
+  }
+  async getOne(id: number): Promise<User> {
+    return await this.userRepository.findOne({
+      where: { id },
+      relations: {
+        role: true,
+      },
+    });
   }
 }

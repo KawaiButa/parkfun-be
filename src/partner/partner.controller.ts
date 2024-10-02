@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from "@nestjs/common";
+import { Controller, Get, Post, Body, Patch, Param, Delete } from "@nestjs/common";
 import { PartnerService } from "./partner.service";
 import { CreatePartnerDto } from "./dto/createPartner.dto";
 import { UpdatePartnerDto } from "./dto/updatePartner.dto";
@@ -28,7 +28,7 @@ export class PartnerController {
   }
 
   @Delete(":id")
-  async remove(@Param("id") id: string, @Query("deleteUser") deleteUser: boolean) {
-    return await this.partnerService.remove(+id, deleteUser);
+  async remove(@Param("id") id: string) {
+    return await this.partnerService.delete(+id);
   }
 }

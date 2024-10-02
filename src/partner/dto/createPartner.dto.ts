@@ -13,6 +13,7 @@ export class CreatePartnerDto extends CreateUserDto {
   type: string;
 
   @IsOptional()
+  @IsString()
   @IsUrl()
-  avatarUrl?: string;
+  image?: string;
 }

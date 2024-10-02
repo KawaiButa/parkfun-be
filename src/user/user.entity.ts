@@ -1,5 +1,6 @@
 import { Exclude } from "class-transformer";
 import { IsAlpha, IsEmail, IsNotEmpty, IsString } from "class-validator";
+import { Image } from "src/image/image.entity";
 import { Partner } from "src/partner/partner.entity";
 import { Role } from "src/role/role.entity";
 import { Column, Entity, JoinColumn, ManyToOne, OneToOne, PrimaryGeneratedColumn } from "typeorm";
@@ -34,7 +35,11 @@ export class User {
   @JoinColumn()
   role: Role;
 
-  @OneToOne(() => Partner, (partner) => partner.user, { cascade: true })
+  @OneToOne(() => Partner, (partner) => partner.user)
   @JoinColumn()
   partner: Partner;
+
+  @OneToOne(() => Image, (image) => image.user, { cascade: true })
+  @JoinColumn()
+  image: Image;
 }

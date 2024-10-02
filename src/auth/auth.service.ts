@@ -65,8 +65,9 @@ export class AuthService {
       });
     const { email, name, iss } = authResult.getPayload();
     let user = await this.userRepository.findOneBy({ email });
+    const hashedPassword = await bcrypt.hash(iss, 10);
     if (!user) {
-      user = await this.userService.create({ name, email, password: iss, role: "user" });
+      user = await this.userService.create({ name, email, password: hashedPassword, role: "user" });
     }
     const accessToken = this.jwtService.sign({ id: user.id, email: user.email });
     return { accessToken, user };

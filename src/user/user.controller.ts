@@ -13,7 +13,7 @@ export class UserController {
 
   @Get(":id")
   async getBy(@Param("id") id: number) {
-    return await this.userService.getOneBy({ id });
+    return await this.userService.getOne(id);
   }
   @Post()
   async create(@Body() body: CreateUserDto) {

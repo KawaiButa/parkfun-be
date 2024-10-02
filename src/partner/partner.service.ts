@@ -21,7 +21,7 @@ export class PartnerService {
     queyrRunner.startTransaction();
     try {
       const partnerType = await this.partnerTypeService.get({ name: createPartnerDto.type });
-      const user = await this.userService.create({ ...createPartnerDto });
+      const user = await this.userService.create(createPartnerDto);
       const partner = this.partnerRepository.create({ ...createPartnerDto, type: partnerType, user });
       await this.partnerRepository.save(partner);
       return partner;
@@ -51,18 +51,15 @@ export class PartnerService {
     throw new NotFoundException("Partner not found");
   }
 
-  async remove(id: number, deleteUser: boolean = false) {
+  async delete(id: number) {
     const queryRunner = this.dataSource.createQueryRunner();
     const partner = await this.partnerRepository.findOneBy({ id });
     if (!partner) throw new NotFoundException("Partner not found");
     await queryRunner.connect();
     queryRunner.startTransaction();
     try {
-      if (deleteUser) {
-        await this.userService.delete(partner.user.id);
-      } else {
-        await this.userService.update(partner.user.id, { partner: null });
-      }
+      await this.userService.delete(partner.user.id);
+      await this.userService.update(partner.user.id, { partner: null });
       const result = await this.partnerRepository.delete(id);
       if (!result.affected) throw new NotFoundException("Partner not found");
       return "Successfully delete partner";
@@ -76,6 +73,7 @@ export class PartnerService {
   getFullPartnerQuery() {
     return this.dataSource
       .createQueryBuilder(Partner, "partner")
+      .innerJoinAndSelect("partner.type", "type", "partner.typeId = type.id")
       .innerJoinAndSelect("partner.user", "user", "partner.id = user.partnerId")
       .innerJoinAndSelect("user.role", "role", "user.roleId = role.id");
   }
