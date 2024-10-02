@@ -15,6 +15,7 @@ export class UserService {
     });
     return await this.userRepository.save(user);
   }
+
   async update(id: number, updateDto: Partial<Omit<User, "id">>) {
     const result = await this.userRepository.update(id, updateDto);
     if (!result.affected) throw new NotFoundException("Cannot find the user");
