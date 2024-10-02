@@ -15,7 +15,7 @@ export class User {
 
   @IsString()
   @Exclude()
-  @Column()
+  @Column({ unique: true })
   password: string;
 
   @IsString()

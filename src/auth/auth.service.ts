@@ -40,7 +40,7 @@ export class AuthService {
     if (!isMatch) {
       throw new UnauthorizedException("Invalid email or password");
     }
-    const accessToken = this.jwtService.sign({ id: user.id, email: user.email });
+    const accessToken = this.jwtService.sign({ id: user.id });
     return { accessToken, user };
   }
 
@@ -54,7 +54,7 @@ export class AuthService {
     if (isExisted) {
       throw new ConflictException("An account registered with email or password has already exists");
     }
-    const user = await this.userService.createUser({ name, email, password: hashedPassword, phoneNumber });
+    const user = await this.userService.create({ name, email, password: hashedPassword, phoneNumber });
     const accessToken = this.jwtService.sign({ id: user.id, email: user.email });
     return { accessToken, user };
   }
@@ -72,7 +72,7 @@ export class AuthService {
     const hashedPassword = bcrypt.hashSync(iss, 10);
     let user = await this.userRepository.findOneBy({ email });
     if (!user) {
-      user = await this.userService.createUser({ name, email, password: hashedPassword });
+      user = await this.userService.create({ name, email, password: hashedPassword });
     }
     const accessToken = this.jwtService.sign({ id: user.id, email: user.email });
     return { accessToken, user };
