@@ -1,9 +1,11 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from "@nestjs/common";
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from "@nestjs/common";
 import { PartnerService } from "./partner.service";
 import { CreatePartnerDto } from "./dto/createPartner.dto";
 import { UpdatePartnerDto } from "./dto/updatePartner.dto";
+import { AuthGuard } from "@nestjs/passport";
 
 @Controller("partner")
+@UseGuards(AuthGuard("jwt"))
 export class PartnerController {
   constructor(private readonly partnerService: PartnerService) {}
 

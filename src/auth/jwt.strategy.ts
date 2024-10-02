@@ -1,4 +1,4 @@
-import { Controller, UnauthorizedException } from "@nestjs/common";
+import { Controller } from "@nestjs/common";
 import { PassportStrategy } from "@nestjs/passport";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Strategy, ExtractJwt } from "passport-jwt";
@@ -14,13 +14,7 @@ export class JWTStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  async validate(payload: { id: number }) {
-    const { id } = payload;
-    const user = await this.userRepository.findOneBy({ id });
-    if (!user) {
-      throw new UnauthorizedException("You have to login first");
-    }
-
-    return user;
+  async validate(payload: { id: number; email: string; role: string }) {
+    return payload;
   }
 }
