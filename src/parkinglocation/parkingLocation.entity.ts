@@ -1,8 +1,9 @@
 import { IsNotEmpty, IsAlpha } from "class-validator";
+import { Image } from "src/image/image.entity";
 import { Partner } from "src/partner/partner.entity";
 import { PaymentMethod } from "src/paymentMethod/paymentMethod.entity";
 import { PricingOption } from "src/pricingOption/pricingOption.entity";
-import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity()
 export class ParkingLocation {
@@ -32,7 +33,7 @@ export class ParkingLocation {
 
   @ManyToOne(() => Partner, { cascade: true })
   @JoinColumn()
-  partner?: Partner;
+  partner: Partner;
 
   @ManyToOne(() => PaymentMethod, { cascade: true })
   @JoinColumn()
@@ -41,4 +42,7 @@ export class ParkingLocation {
   @ManyToOne(() => PricingOption, { cascade: true })
   @JoinColumn()
   pricingOption: PricingOption;
+
+  @OneToMany(() => Image, (img) => img.parkingLocation, { cascade: true })
+  images: Image[];
 }

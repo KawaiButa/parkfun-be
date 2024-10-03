@@ -1,4 +1,4 @@
-import { IsAlpha, IsNotEmpty, IsNumber, IsString } from "class-validator";
+import { ArrayMaxSize, ArrayMinSize, IsAlpha, IsArray, IsNotEmpty, IsNumber, IsString, IsUrl } from "class-validator";
 
 export class CreateParkingLocationDto {
   @IsString()
@@ -24,4 +24,11 @@ export class CreateParkingLocationDto {
   @IsNumber()
   @IsNotEmpty()
   paymentMethodId: number;
+
+  @IsArray()
+  @ArrayMinSize(4)
+  @ArrayMaxSize(4)
+  @IsString({ each: true })
+  @IsUrl({}, { each: true })
+  images: string[];
 }

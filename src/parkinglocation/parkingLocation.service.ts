@@ -5,7 +5,9 @@ import { DataSource, Repository } from "typeorm";
 import { ParkingLocation } from "./parkingLocation.entity";
 import { PricingOptionService } from "src/pricingOption/pricingOption.service";
 import { PaymentMethodService } from "src/paymentMethod/paymentMethod.service";
-import { PartnerService } from "src/partner/partner.service";
+import { Partner } from "src/partner/partner.entity";
+import { User } from "src/user/user.entity";
+import { UpdateParkingLocationDto } from "./dtos/updateParkingLocation.dto";
 
 @Injectable()
 export class ParkingLocationService {
@@ -13,18 +15,25 @@ export class ParkingLocationService {
     @InjectRepository(ParkingLocation) private parkingLocationRepository: Repository<ParkingLocation>,
     private pricingOptionService: PricingOptionService,
     private paymentMethodService: PaymentMethodService,
-    private partnerService: PartnerService,
     private dataSource: DataSource
   ) {}
-  async create(createParkingLocationDto: CreateParkingLocationDto) {
-    const { pricingOptionId, paymentMethodId } = createParkingLocationDto;
+  async create(userId: number, createParkingLocationDto: CreateParkingLocationDto) {
+    const { pricingOptionId, paymentMethodId, images } = createParkingLocationDto;
     const pricingOption = await this.pricingOptionService.get(pricingOptionId);
     const paymentMethod = await this.paymentMethodService.get(paymentMethodId);
-
+    const partner = await this.dataSource
+      .createQueryBuilder(Partner, "partner")
+      .innerJoinAndSelect(User, "user", "user.partnerId = partner.id")
+      .where("user.id = :userId", { userId })
+      .getOne();
     const parkingLocation = this.parkingLocationRepository.create({
       ...createParkingLocationDto,
       pricingOption,
       paymentMethod,
+      images: images.map((image) => ({
+        url: image,
+      })),
+      partner,
     });
     return await this.parkingLocationRepository.save(parkingLocation);
   }
@@ -50,8 +59,10 @@ export class ParkingLocationService {
     });
   }
 
-  async update(id: number, updateData: Partial<Omit<ParkingLocation, "id">>) {
-    const updateResult = await this.parkingLocationRepository.update(id, updateData);
+  async update(id: number, updateData: UpdateParkingLocationDto) {
+    const { images } = updateData;
+    const imagesEntity = images.map((image) => ({ url: image }));
+    const updateResult = await this.parkingLocationRepository.update(id, { ...updateData, images: imagesEntity });
     if (updateResult.affected) {
       return await this.parkingLocationRepository.findOne({ where: { id } });
     } else {

@@ -1,15 +1,20 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from "@nestjs/common";
+import { Controller, Get, Post, Body, Patch, Param, Delete, Request, UseGuards } from "@nestjs/common";
 import { ParkingLocationService } from "./parkingLocation.service";
 import { CreateParkingLocationDto } from "./dtos/createParkingLocation.dto";
 import { UpdateParkingLocationDto } from "./dtos/updateParkingLocation.dto";
+import { AuthGuard } from "@nestjs/passport";
 
 @Controller("parking-location")
+@UseGuards(AuthGuard("jwt"))
 export class ParkingLocationController {
   constructor(private readonly parkingLocationService: ParkingLocationService) {}
 
   @Post()
-  create(@Body() createParkingLocationDto: CreateParkingLocationDto) {
-    return this.parkingLocationService.create(createParkingLocationDto);
+  create(
+    @Body() createParkingLocationDto: CreateParkingLocationDto,
+    @Request() { user }: Request & { user: { id: number; email: string; role: string } }
+  ) {
+    return this.parkingLocationService.create(user.id, createParkingLocationDto);
   }
 
   @Get()
@@ -24,7 +29,9 @@ export class ParkingLocationController {
 
   @Patch(":id")
   update(@Param("id") id: string, @Body() updateParkingLocationDto: UpdateParkingLocationDto) {
-    return this.parkingLocationService.update(+id, updateParkingLocationDto);
+    return this.parkingLocationService.update(+id, {
+      ...updateParkingLocationDto,
+    });
   }
 
   @Delete(":id")

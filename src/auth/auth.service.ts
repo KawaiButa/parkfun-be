@@ -56,7 +56,7 @@ export class AuthService {
       throw new ConflictException("Password and confirmPassword do not match");
     }
     const user = await this.userService.create({ ...props, email, password, role: "user" });
-    const accessToken = this.jwtService.sign({ id: user.id, email: user.email, role: "user" });
+    const accessToken = this.jwtService.sign({ id: user.id, email: user.email, role: user.role });
     return { accessToken, user };
   }
   async loginWithGoogle(@Body() loginWithGoogleDto: LoginWithGoogleDto) {
