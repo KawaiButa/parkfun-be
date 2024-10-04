@@ -38,12 +38,14 @@ export class ParkingLocationService {
     return await this.parkingLocationRepository.save(parkingLocation);
   }
 
-  async findAll() {
+  async findAll(partnerId?: number) {
     return await this.parkingLocationRepository.find({
+      where: { partner: { id: partnerId } },
       relations: {
         partner: true,
         paymentMethod: true,
         pricingOption: true,
+        images: true,
       },
     });
   }
