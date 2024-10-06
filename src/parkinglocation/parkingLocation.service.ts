@@ -46,6 +46,7 @@ export class ParkingLocationService {
         paymentMethod: true,
         pricingOption: true,
         images: true,
+        parkingSlot: true,
       },
     });
   }

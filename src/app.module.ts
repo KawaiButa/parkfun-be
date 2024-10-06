@@ -8,6 +8,9 @@ import { AuthModule } from "./auth/auth.module";
 import { UserModule } from "./user/user.module";
 import { PartnerModule } from "./partner/partner.module";
 import { ParkingLocationModule } from "./parkinglocation/parkingLocation.module";
+import { PartnerTypeModule } from "./partnerType/partnerType.module";
+import { RoleModule } from "./role/role.module";
+import { ParkingSlotModule } from "./parkingSlot/parkingSlot.module";
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -25,6 +28,9 @@ import { ParkingLocationModule } from "./parkinglocation/parkingLocation.module"
     AuthModule,
     PartnerModule,
     ParkingLocationModule,
+    RoleModule,
+    PartnerTypeModule,
+    ParkingSlotModule,
   ],
   controllers: [AppController],
   providers: [AppService],

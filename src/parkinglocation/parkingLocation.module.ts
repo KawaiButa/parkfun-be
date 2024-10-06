@@ -11,5 +11,6 @@ import { PartnerModule } from "src/partner/partner.module";
   imports: [TypeOrmModule.forFeature([ParkingLocation]), PaymentMethodModule, PricingOptionModule, PartnerModule],
   controllers: [ParkingLocationController],
   providers: [ParkingLocationService],
+  exports: [ParkingLocationService],
 })
 export class ParkingLocationModule {}

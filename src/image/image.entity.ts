@@ -1,4 +1,5 @@
 import { ParkingLocation } from "src/parkinglocation/parkingLocation.entity";
+import { ParkingSlot } from "src/parkingSlot/parkingSlot.entity";
 import { User } from "src/user/user.entity";
 import {
   Column,
@@ -22,6 +23,9 @@ export class Image {
   @ManyToOne(() => ParkingLocation, (parkingLocation) => parkingLocation.images)
   @JoinColumn()
   parkingLocation?: ParkingLocation;
+
+  @ManyToOne(() => ParkingSlot, (parkingSlot) => parkingSlot.images)
+  parkingSlot?: ParkingSlot;
 
   @OneToOne(() => User, (user) => user.image)
   user: User;

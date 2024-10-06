@@ -1,5 +1,6 @@
 import { IsNotEmpty, IsAlpha } from "class-validator";
 import { Image } from "src/image/image.entity";
+import { ParkingSlot } from "src/parkingSlot/parkingSlot.entity";
 import { Partner } from "src/partner/partner.entity";
 import { PaymentMethod } from "src/paymentMethod/paymentMethod.entity";
 import { PricingOption } from "src/pricingOption/pricingOption.entity";
@@ -45,4 +46,7 @@ export class ParkingLocation {
 
   @OneToMany(() => Image, (img) => img.parkingLocation, { cascade: true })
   images: Image[];
+
+  @OneToMany(() => ParkingSlot, (parkingSlot) => parkingSlot.parkingLocation)
+  parkingSlot: ParkingSlot[];
 }
