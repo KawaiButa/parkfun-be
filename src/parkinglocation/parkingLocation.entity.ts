@@ -44,7 +44,7 @@ export class ParkingLocation {
   @JoinColumn()
   pricingOption: PricingOption;
 
-  @OneToMany(() => Image, (img) => img.parkingLocation, { cascade: true })
+  @OneToMany(() => Image, (img) => img.parkingLocation, { cascade: true, onUpdate: "CASCADE" })
   images: Image[];
 
   @OneToMany(() => ParkingSlot, (parkingSlot) => parkingSlot.parkingLocation)

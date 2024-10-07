@@ -12,4 +12,8 @@ export class PricingOptionService {
   async getBy(param: Partial<PricingOption>): Promise<PricingOption> {
     return await this.pricingOptionRepository.findOne({ where: param });
   }
+
+  async getAll(): Promise<PricingOption[]> {
+    return await this.pricingOptionRepository.find();
+  }
 }

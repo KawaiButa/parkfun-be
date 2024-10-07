@@ -1,4 +1,4 @@
-import { IsOptional, IsString, IsUrl } from "class-validator";
+import { IsNumber, IsOptional, IsString, IsUrl } from "class-validator";
 import { PartnerType } from "src/partnerType/partnerType.entity";
 import { User } from "src/user/user.entity";
 import { Column, Entity, JoinColumn, ManyToOne, OneToOne, PrimaryGeneratedColumn } from "typeorm";
@@ -6,6 +6,7 @@ import { Column, Entity, JoinColumn, ManyToOne, OneToOne, PrimaryGeneratedColumn
 @Entity()
 export class Partner {
   @PrimaryGeneratedColumn()
+  @IsNumber()
   id: number;
 
   @Column()

@@ -1,5 +1,5 @@
 import { ParkingSlot } from "src/parkingSlot/parkingSlot.entity";
-import { Column, Entity, ManyToMany, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, JoinTable, ManyToMany, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity()
 export class ParkingService {
@@ -13,5 +13,6 @@ export class ParkingService {
   description: string;
 
   @ManyToMany(() => ParkingSlot, (parkingSlot) => parkingSlot.services)
+  @JoinTable()
   parkingSlots: ParkingSlot[];
 }

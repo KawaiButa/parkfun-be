@@ -7,6 +7,7 @@ import {
   DeleteDateColumn,
   Entity,
   JoinColumn,
+  ManyToMany,
   ManyToOne,
   OneToOne,
   PrimaryGeneratedColumn,
@@ -20,11 +21,14 @@ export class Image {
   @Column()
   url: string;
 
-  @ManyToOne(() => ParkingLocation, (parkingLocation) => parkingLocation.images)
+  @ManyToOne(() => ParkingLocation, (parkingLocation) => parkingLocation.images, {
+    onDelete: "CASCADE",
+    onUpdate: "CASCADE",
+  })
   @JoinColumn()
   parkingLocation?: ParkingLocation;
 
-  @ManyToOne(() => ParkingSlot, (parkingSlot) => parkingSlot.images)
+  @ManyToMany(() => ParkingSlot, (parkingSlot) => parkingSlot.images)
   parkingSlot?: ParkingSlot;
 
   @OneToOne(() => User, (user) => user.image)

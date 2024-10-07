@@ -3,7 +3,7 @@ import { Image } from "src/image/image.entity";
 import { ParkingLocation } from "src/parkinglocation/parkingLocation.entity";
 import { ParkingService } from "src/parkingService/parkingSerivce.entity";
 import { ParkingSlotType } from "src/parkingSlotType/parkingSlotType.entity";
-import { Column, Entity, JoinColumn, ManyToMany, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity()
 export class ParkingSlot {
@@ -53,6 +53,7 @@ export class ParkingSlot {
   @ManyToMany(() => ParkingService, (service) => service.parkingSlots)
   services: ParkingService[];
 
-  @OneToMany(() => Image, (image) => image.parkingSlot)
+  @ManyToMany(() => Image, (image) => image.parkingSlot, { cascade: true })
+  @JoinTable()
   images: Image[];
 }

@@ -20,6 +20,7 @@ export class JWTStrategy extends PassportStrategy(Strategy) {
       where: { id },
       relations: {
         partner: true,
+        role: true,
       },
     });
     if (!user) {

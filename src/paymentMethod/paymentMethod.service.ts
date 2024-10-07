@@ -14,4 +14,8 @@ export class PaymentMethodService {
   async getBy(param: Partial<PaymentMethod>): Promise<PaymentMethod> {
     return await this.paymentMethodRepository.findOne({ where: param });
   }
+
+  async getAll(): Promise<PaymentMethod[]> {
+    return await this.paymentMethodRepository.find();
+  }
 }

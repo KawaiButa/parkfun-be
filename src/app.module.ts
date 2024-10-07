@@ -11,6 +11,9 @@ import { ParkingLocationModule } from "./parkinglocation/parkingLocation.module"
 import { PartnerTypeModule } from "./partnerType/partnerType.module";
 import { RoleModule } from "./role/role.module";
 import { ParkingSlotModule } from "./parkingSlot/parkingSlot.module";
+import { ParkingServiceModule } from "./parkingService/parkingService.module";
+import { PaymentMethodModule } from "./paymentMethod/paymentMethod.module";
+import { PricingOptionModule } from "./pricingOption/pricingOption.module";
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -31,6 +34,9 @@ import { ParkingSlotModule } from "./parkingSlot/parkingSlot.module";
     RoleModule,
     PartnerTypeModule,
     ParkingSlotModule,
+    ParkingServiceModule,
+    PaymentMethodModule,
+    PricingOptionModule,
   ],
   controllers: [AppController],
   providers: [AppService],
