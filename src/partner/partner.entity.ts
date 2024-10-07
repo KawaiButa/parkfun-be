@@ -27,6 +27,6 @@ export class Partner {
   @JoinColumn()
   type: PartnerType;
 
-  @OneToOne(() => User, (user) => user.partner)
+  @OneToOne(() => User, (user) => user.partner, { cascade: true, eager: true })
   user: User;
 }

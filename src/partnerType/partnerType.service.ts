@@ -11,6 +11,6 @@ export class PartnerTypeService {
     return this.partnerTypeRepository.findOne({ where: param });
   }
   async getAll() {
-    return this.partnerTypeRepository.find();
+    return await this.partnerTypeRepository.find();
   }
 }
