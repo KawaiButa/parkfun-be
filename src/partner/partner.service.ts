@@ -6,7 +6,7 @@ import { DataSource, Repository } from "typeorm";
 import { Partner } from "./partner.entity";
 import { PartnerTypeService } from "src/partnerType/partnerType.service";
 import { UserService } from "src/user/user.service";
-
+import * as bcrypt from "bcrypt";
 @Injectable()
 export class PartnerService {
   constructor(
@@ -20,9 +20,14 @@ export class PartnerService {
     queyrRunner.connect();
     queyrRunner.startTransaction();
     try {
-      const partnerType = await this.partnerTypeService.get({ name: createPartnerDto.type });
-      const user = await this.userService.create(createPartnerDto);
-      const partner = this.partnerRepository.create({ ...createPartnerDto, type: partnerType, user });
+      const partnerType = await this.partnerTypeService.get({ id: createPartnerDto.typeId });
+      const hashedPassword = await bcrypt.hash(createPartnerDto.password, 10);
+      const user = await this.userService.create({ ...createPartnerDto, password: hashedPassword });
+      const partner = this.partnerRepository.create({
+        ...createPartnerDto,
+        type: partnerType,
+        user,
+      });
       await this.partnerRepository.save(partner);
       return partner;
     } catch (err) {
@@ -38,7 +43,15 @@ export class PartnerService {
   }
 
   async findOneById(id: number) {
-    const partner = await this.getFullPartnerQuery().where("partner.id = :id", { id }).getOne();
+    const partner = await this.partnerRepository.findOne({
+      where: { id },
+      relations: {
+        user: {
+          image: true,
+        },
+        type: true,
+      },
+    });
     if (!partner) {
       throw new NotFoundException("Partner not found");
     }
@@ -46,8 +59,24 @@ export class PartnerService {
   }
 
   async update(id: number, updatePartnerDto: UpdatePartnerDto) {
-    const updateResult = await this.partnerRepository.update(id, updatePartnerDto);
-    if (updateResult.affected) return await this.partnerRepository.findBy({ id });
+    const partnerEntity = await this.partnerRepository.findOne({
+      where: { id },
+      relations: {
+        user: true,
+        type: true,
+      },
+    });
+
+    const { phoneNumber, typeId, name, ...data } = updatePartnerDto;
+    const partnerType = await this.partnerTypeService.get({ id: typeId });
+    const partner = await this.partnerRepository.preload({
+      ...partnerEntity,
+      ...data,
+      type: partnerType,
+      user: { ...partnerEntity.user, name, phoneNumber },
+    });
+    const updateResult = this.partnerRepository.save(partner);
+    if (updateResult) return updateResult;
     throw new NotFoundException("Partner not found");
   }
 
@@ -59,7 +88,6 @@ export class PartnerService {
     queryRunner.startTransaction();
     try {
       await this.userService.delete(partner.user.id);
-      await this.userService.update(partner.user.id, { partner: null });
       const result = await this.partnerRepository.delete(id);
       if (!result.affected) throw new NotFoundException("Partner not found");
       return "Successfully delete partner";

@@ -32,7 +32,12 @@ export class AuthService {
   }
   async login(loginDto: LoginDto) {
     const { email, password } = loginDto;
-    const user = await this.userRepository.findOneBy({ email });
+    const user = await this.userRepository.findOne({
+      where: { email },
+      relations: {
+        role: true,
+      },
+    });
     if (!user) {
       throw new UnauthorizedException("Invalid email or password");
     }
@@ -40,7 +45,7 @@ export class AuthService {
     if (!isMatch) {
       throw new UnauthorizedException("Invalid email or password");
     }
-    const accessToken = this.jwtService.sign({ id: user.id });
+    const accessToken = this.jwtService.sign({ id: user.id, role: user.role.name });
     return { accessToken, user };
   }
 
@@ -49,7 +54,8 @@ export class AuthService {
     if (password !== confirmPassword) {
       throw new ConflictException("Password and confirmPassword do not match");
     }
-    const user = await this.userService.create({ ...props, email, password, role: "user" });
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const user = await this.userService.create({ ...props, email, password: hashedPassword, role: "user" });
     const accessToken = this.jwtService.sign({ id: user.id, email: user.email });
     return { accessToken, user };
   }

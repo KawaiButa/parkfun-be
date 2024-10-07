@@ -80,6 +80,7 @@ export class UserService {
       where: { id },
       relations: {
         role: true,
+        image: true,
       },
     });
   }
