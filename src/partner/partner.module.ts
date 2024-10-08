@@ -11,5 +11,6 @@ import { RoleModule } from "src/role/role.module";
   imports: [PartnerTypeModule, RoleModule, UserModule, TypeOrmModule.forFeature([Partner])],
   controllers: [PartnerController],
   providers: [PartnerService],
+  exports: [PartnerService],
 })
 export class PartnerModule {}
