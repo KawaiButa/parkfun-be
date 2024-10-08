@@ -6,6 +6,9 @@ import * as Joi from "@hapi/joi";
 import { DatabaseModule } from "./database/database.module";
 import { AuthModule } from "./auth/auth.module";
 import { UserModule } from "./user/user.module";
+import { PartnerModule } from "./partner/partner.module";
+import { PartnerTypeModule } from "./partnerType/partnerType.module";
+import { RoleModule } from "./role/role.module";
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -19,8 +22,11 @@ import { UserModule } from "./user/user.module";
       }),
     }),
     DatabaseModule,
-    AuthModule,
     UserModule,
+    AuthModule,
+    PartnerModule,
+    RoleModule,
+    PartnerTypeModule,
   ],
   controllers: [AppController],
   providers: [AppService],

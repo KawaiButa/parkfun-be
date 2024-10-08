@@ -1,21 +1,32 @@
-import { Body, Controller, Get, Patch, Request, UseGuards } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, Patch, Post } from "@nestjs/common";
+import { CreateUserDto } from "./dtos/createUser.dto";
 import { UserService } from "./user.service";
 import { UpdateUserDto } from "./dtos/updateUser.dto";
-import JwtAuthenticationGuard from "src/auth/jwt.guard";
-import { User } from "./user.entity";
 
 @Controller("user")
-@UseGuards(JwtAuthenticationGuard)
 export class UserController {
   constructor(private userService: UserService) {}
-
-  @Get("/me")
-  async getMe(@Request() request: Request & { user: User }) {
-    return request.user;
+  @Get()
+  async getAll() {
+    return await this.userService.getAll();
   }
 
-  @Patch("/me")
-  async updateMe(@Body() updateDto: UpdateUserDto, @Request() { user: { id } }: Request & { user: User }) {
-    return this.userService.update(id, updateDto);
+  @Get(":id")
+  async getBy(@Param("id") id: number) {
+    return await this.userService.getOne(id);
+  }
+  @Post()
+  async create(@Body() body: CreateUserDto) {
+    return await this.userService.create(body);
+  }
+
+  @Patch(":id")
+  async update(@Param("id") id: number, @Body() body: UpdateUserDto) {
+    return await this.userService.update(id, body);
+  }
+
+  @Delete(":id")
+  async delete(@Param("id") id: number) {
+    await this.userService.delete(id);
   }
 }
