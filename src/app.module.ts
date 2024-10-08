@@ -24,6 +24,7 @@ import { PricingOptionModule } from "./pricingOption/pricingOption.module";
         DB_PASSWORD: Joi.string().required(),
         DB_NAME: Joi.string().required(),
         PORT: Joi.number(),
+        IS_PRODUCTION: Joi.boolean().required(),
       }),
     }),
     DatabaseModule,
