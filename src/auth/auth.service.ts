@@ -7,7 +7,7 @@ import {
 } from "@nestjs/common";
 import { SignUpDto } from "./dtos/signup.dto";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
+import { EntityNotFoundError, Repository } from "typeorm";
 import * as bcrypt from "bcrypt";
 import { User } from "src/user/user.entity";
 import { JwtService } from "@nestjs/jwt";
@@ -32,16 +32,25 @@ export class AuthService {
   }
   async login(loginDto: LoginDto) {
     const { email, password } = loginDto;
-    const user = await this.userRepository.findOneBy({ email });
-    if (!user) {
-      throw new UnauthorizedException("Invalid email or password");
+    try {
+      const user = await this.userRepository.findOne({
+        where: { email },
+        relations: {
+          role: true,
+        },
+      });
+      const isMatch = await bcrypt.compare(password, user.password);
+      if (!isMatch) {
+        throw new UnauthorizedException("Invalid email or password");
+      }
+      const accessToken = this.jwtService.sign({ id: user.id, email: user.email, role: user.role.name });
+      return { accessToken, user };
+    } catch (err) {
+      if (err instanceof EntityNotFoundError) {
+        throw new UnauthorizedException("Invalid email or password");
+      }
+      throw err;
     }
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      throw new UnauthorizedException("Invalid email or password");
-    }
-    const accessToken = this.jwtService.sign({ id: user.id });
-    return { accessToken, user };
   }
 
   async register(signUpDto: SignUpDto) {
@@ -50,7 +59,7 @@ export class AuthService {
       throw new ConflictException("Password and confirmPassword do not match");
     }
     const user = await this.userService.create({ ...props, email, password, role: "user" });
-    const accessToken = this.jwtService.sign({ id: user.id, email: user.email });
+    const accessToken = this.jwtService.sign({ id: user.id, email: user.email, role: "user" });
     return { accessToken, user };
   }
   async loginWithGoogle(@Body() loginWithGoogleDto: LoginWithGoogleDto) {
@@ -69,7 +78,7 @@ export class AuthService {
     if (!user) {
       user = await this.userService.create({ name, email, password: hashedPassword, role: "user" });
     }
-    const accessToken = this.jwtService.sign({ id: user.id, email: user.email });
+    const accessToken = this.jwtService.sign({ id: user.id, email: user.email, role: "user" });
     return { accessToken, user };
   }
 }
