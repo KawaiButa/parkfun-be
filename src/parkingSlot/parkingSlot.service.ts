@@ -4,7 +4,7 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { DataSource, Repository } from "typeorm";
 import { ParkingSlot } from "./parkingSlot.entity";
 import { ParkingSlotTypeService } from "src/parkingSlotType/parkingSlotType.service";
-import { ParkingService } from "src/parkingService/parkingSerivce.entity";
+import { ParkingService } from "src/parkingService/parkingService.entity";
 import { ParkingLocationService } from "src/parkinglocation/parkingLocation.service";
 import { Image } from "src/image/image.entity";
 

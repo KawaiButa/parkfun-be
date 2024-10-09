@@ -1,7 +1,7 @@
 import { IsBoolean, IsNumber, IsString } from "class-validator";
 import { Image } from "src/image/image.entity";
 import { ParkingLocation } from "src/parkinglocation/parkingLocation.entity";
-import { ParkingService } from "src/parkingService/parkingSerivce.entity";
+import { ParkingService } from "src/parkingService/parkingService.entity";
 import { ParkingSlotType } from "src/parkingSlotType/parkingSlotType.entity";
 import { Column, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 
@@ -46,7 +46,7 @@ export class ParkingSlot {
   @JoinColumn()
   type: ParkingSlotType;
 
-  @ManyToOne(() => ParkingLocation, { nullable: true })
+  @ManyToOne(() => ParkingLocation, { nullable: true, eager: true })
   @JoinColumn()
   parkingLocation: ParkingLocation;
 
