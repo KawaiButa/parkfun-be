@@ -46,7 +46,7 @@ export class ParkingSlot {
   @JoinColumn()
   type: ParkingSlotType;
 
-  @ManyToOne(() => ParkingLocation, { nullable: true })
+  @ManyToOne(() => ParkingLocation, { nullable: true, eager: true })
   @JoinColumn()
   parkingLocation: ParkingLocation;
 

@@ -1,5 +1,5 @@
 import { Exclude } from "class-transformer";
-import { IsAlpha, IsEmail, IsNotEmpty, IsString } from "class-validator";
+import { IsEmail, IsNotEmpty, IsString } from "class-validator";
 import { Image } from "src/image/image.entity";
 import { Partner } from "src/partner/partner.entity";
 import { Role } from "src/role/role.entity";
@@ -22,7 +22,6 @@ export class User {
   password: string;
 
   @IsString()
-  @IsAlpha()
   @IsNotEmpty()
   @Column()
   name: string;
