@@ -1,0 +1,39 @@
+name: Deploy to Azure using Docker Compose
+
+on:
+  push:
+    branches: [ main ]
+
+env:
+  AZURE_WEBAPP_NAME: ${{secrets.WEBAPP_NAME}}
+  DOCKER_REGISTRY: ${{secrets.WEBAPP_NAME}}.azurecr.io
+  RESOURCE_GROUP: ${{secrets.WEBAPP_NAME}}
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v2
+    
+    - name: Login to Azure Container Registry
+      uses: azure/docker-login@v1
+      with:
+        login-server: ${{ env.DOCKER_REGISTRY }}
+        username: ${{ secrets.REGISTRY_USERNAME }}
+        password: ${{ secrets.REGISTRY_PASSWORD }}
+    
+    - name: Build and push Docker Compose services
+      run: |
+        # Set the image tag
+        export IMAGE_TAG=${{ github.sha }}
+        
+        # Build images
+        docker-compose -f compose.yaml build
+
+        docker tag server:latest ${{env.DOCKER_REGISTRY}}/server:latest
+        docker tag postgres:16-alpine ${{env.DOCKER_REGISTRY}}/postgres:latest
+        
+        # Push images
+        docker push ${{env.DOCKER_REGISTRY}}/server:latest
+        docker push ${{env.DOCKER_REGISTRY}}/postgres:latest
