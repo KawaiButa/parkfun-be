@@ -26,6 +26,6 @@ export class JWTStrategy extends PassportStrategy(Strategy) {
     if (!user) {
       throw new UnauthorizedException("You have to login first");
     }
-    return user;
+    return;
   }
 }

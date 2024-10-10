@@ -18,9 +18,10 @@ export class ParkingLocationController {
   ) {
     return this.parkingLocationService.create(user.id, createParkingLocationDto);
   }
-
-  @Get("/search")
-  async search(
+  @Get()
+  @UseGuards(RolesGuard())
+  findAll(
+    @Req() request: Request & { user: User },
     @Query("lat") lat: number,
     @Query("lng") lng: number,
     @Query("Radius") radius: number = 10,
@@ -35,34 +36,32 @@ export class ParkingLocationController {
     @Query("type") type?: number,
     @Query("services") services?: string
   ) {
-    return await this.parkingLocationService.search({
-      lat,
-      lng,
-      radius,
-      isAvailable,
-      startAt,
-      endAt,
-      priceStartAt,
-      priceEndAt,
-      width,
-      height,
-      length,
-      type,
-      services,
-    });
-  }
-  @Get()
-  @UseGuards(AuthGuard("jwt"), RolesGuard("admin", "partner"))
-  findAll(@Req() request: Request & { user: User }) {
     const { user } = request;
+    if (!user)
+      return this.parkingLocationService.search({
+        lat,
+        lng,
+        radius,
+        isAvailable,
+        startAt,
+        endAt,
+        priceStartAt,
+        priceEndAt,
+        width,
+        height,
+        length,
+        type,
+        services,
+      });
     if (!user.partner) return this.parkingLocationService.findAll();
     return this.parkingLocationService.findAll(user.partner.id);
   }
 
   @Get(":id")
-  @UseGuards(AuthGuard("jwt"), RolesGuard("admin", "partner"))
+  @UseGuards(RolesGuard("admin", "partner"))
   findOne(@Param("id") id: string, @Req() request: Request & { user: User }) {
     const { user } = request;
+    if (!user) return this.parkingLocationService.findOne(+id);
     if (user.role.name === "admin") return this.parkingLocationService.findOne(+id);
     return this.parkingLocationService.findOne(+id, user.partner.id);
   }
@@ -75,7 +74,10 @@ export class ParkingLocationController {
   }
 
   @Delete(":id")
-  remove(@Param("id") id: string) {
-    return this.parkingLocationService.remove(+id);
+  @UseGuards(RolesGuard("admin", "partner"))
+  remove(@Param("id") id: string, @Req() request: Request & { user: User }) {
+    const { user } = request;
+    if (user.role.name === "admin") return this.parkingLocationService.remove(+id);
+    return this.parkingLocationService.remove(+id, user.partner.id);
   }
 }
