@@ -24,7 +24,7 @@ export class ParkingLocationController {
     @Req() request: Request & { user: User },
     @Query("lat") lat: number,
     @Query("lng") lng: number,
-    @Query("Radius") radius: number = 10,
+    @Query("radius") radius: number = 10,
     @Query("isAvailable") isAvailable: boolean = true,
     @Query("startAt") startAt?: number,
     @Query("endAt") endAt?: number,
@@ -58,14 +58,13 @@ export class ParkingLocationController {
   }
 
   @Get(":id")
-  @UseGuards(RolesGuard("admin", "partner"))
+  @UseGuards(RolesGuard())
   findOne(@Param("id") id: string, @Req() request: Request & { user: User }) {
     const { user } = request;
     if (!user) return this.parkingLocationService.findOne(+id);
     if (user.role.name === "admin") return this.parkingLocationService.findOne(+id);
     return this.parkingLocationService.findOne(+id, user.partner.id);
   }
-
   @Patch(":id")
   update(@Param("id") id: string, @Body() updateParkingLocationDto: UpdateParkingLocationDto) {
     return this.parkingLocationService.update(+id, {

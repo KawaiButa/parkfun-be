@@ -14,6 +14,7 @@ import { ParkingSlotModule } from "./parkingSlot/parkingSlot.module";
 import { ParkingServiceModule } from "./parkingService/parkingService.module";
 import { PaymentMethodModule } from "./paymentMethod/paymentMethod.module";
 import { PricingOptionModule } from "./pricingOption/pricingOption.module";
+import { BookingModule } from "./booking/booking.module";
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -38,6 +39,7 @@ import { PricingOptionModule } from "./pricingOption/pricingOption.module";
     ParkingServiceModule,
     PaymentMethodModule,
     PricingOptionModule,
+    BookingModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import { CreateParkingLocationDto } from "./dtos/createParkingLocation.dto";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Between, DataSource, QueryFailedError, Repository } from "typeorm";
+import { DataSource, QueryFailedError, Repository } from "typeorm";
 import { ParkingLocation } from "./parkingLocation.entity";
 import { PricingOptionService } from "src/pricingOption/pricingOption.service";
 import { PaymentMethodService } from "src/paymentMethod/paymentMethod.service";
@@ -10,7 +10,7 @@ import { User } from "src/user/user.entity";
 import { UpdateParkingLocationDto } from "./dtos/updateParkingLocation.dto";
 import { SearchParkingLocationDto } from "./dtos/searchParkingLocation.dto";
 import { ParkingSlot } from "src/parkingSlot/parkingSlot.entity";
-import { omitBy, isUndefined, uniqBy } from "lodash";
+import { omitBy, isUndefined } from "lodash";
 @Injectable()
 export class ParkingLocationService {
   constructor(
@@ -20,32 +20,74 @@ export class ParkingLocationService {
     private dataSource: DataSource
   ) {}
   async search(searchParkingLocationDto: SearchParkingLocationDto) {
-    const { lat, lng, services, radius, priceEndAt, priceStartAt, ...query } = searchParkingLocationDto;
+    const {
+      lat,
+      lng,
+      services,
+      startAt,
+      endAt,
+      radius,
+      priceEndAt = 10000,
+      priceStartAt = 0,
+      ...query
+    } = searchParkingLocationDto;
     const filteredQuery = omitBy(query, isUndefined);
-    const data = await this.dataSource
-      .createQueryBuilder(ParkingSlot, "parkingSlot")
-      .innerJoinAndSelect("parkingSlot.services", "service", "service.id IN (:...serviceIds)", {
-        serviceIds: services.split("-"),
-      })
-      .where({
-        ...filteredQuery,
-        price: Between(priceStartAt, priceEndAt),
-      })
-      .innerJoinAndSelect("parkingSlot.parkingLocation", "parkingLocation")
+    let queryBuilder = this.parkingLocationRepository
+      .createQueryBuilder("parkingLocation")
+      .innerJoinAndSelect("parkingLocation.parkingSlots", "parkingSlot");
+
+    queryBuilder = queryBuilder
+      .andWhere(`parkingSlot.price BETWEEN ${priceStartAt} AND ${priceEndAt}`)
+      .andWhere((qb) => {
+        const subQuery = qb
+          .subQuery()
+          .select("parkingSlot2.id")
+          .from(ParkingSlot, "parkingSlot2")
+          .where(filteredQuery)
+          .getQuery();
+        return "parkingSlot.id IN " + subQuery;
+      });
+    if (startAt && endAt) {
+      const limmitedStartAt = startAt % 86400;
+      const limitedEndAt = endAt & 86400;
+      queryBuilder = queryBuilder
+        .where(
+          "(timeRange.givenStartTime <= timeRange.givenEndTime AND :startAt >= timeRange.givenStartTime AND :endAt <= timeRange.givenEndTime)",
+          { startAt: limmitedStartAt, endAt: limitedEndAt }
+        )
+        .orWhere(
+          "(timeRange.givenStartTime > timeRange.givenEndTime AND (:startAt >= timeRange.givenStartTime OR :endAt <= timeRange.givenEndTime))",
+          { startAt: limmitedStartAt, endAt: limitedEndAt }
+        );
+    }
+    if (services) {
+      const serviceIds = services.split("-");
+      queryBuilder = queryBuilder
+        .leftJoinAndSelect("parkingSlot.services", "service")
+        .where("service.id IN (:...serviceIds)", { serviceIds });
+    }
+    queryBuilder = queryBuilder
       .innerJoinAndSelect("parkingLocation.images", "images")
-      .getMany();
-    const filteredData = data.filter(({ services: serviceList, parkingLocation }) => {
-      const distance = this.calculateDistance({ lat, lng }, { lat: parkingLocation.lat, lng: parkingLocation.lng });
-      if (distance > radius) return false;
-      return serviceList.length === services.split("-").length;
-    });
-    const parkingLocationList = filteredData.map(({ parkingLocation }) => parkingLocation);
-    return uniqBy(parkingLocationList, "id");
+      .innerJoinAndSelect("parkingLocation.partner", "partner")
+      .innerJoinAndSelect("partner.user", "user")
+      .innerJoinAndSelect("parkingSlot.type", "type");
+    const data = await queryBuilder.getMany();
+    if (lat && lng && radius) {
+      const filteredData = data.filter((parkingLocation) => {
+        const distance = this.calculateDistance({ lat, lng }, { lat: parkingLocation.lat, lng: parkingLocation.lng });
+        if (distance > radius) return false;
+        return true;
+      });
+      return filteredData;
+    }
+    return data;
   }
   async create(userId: number, createParkingLocationDto: CreateParkingLocationDto) {
     const { pricingOptionId, paymentMethodId, images } = createParkingLocationDto;
-    const pricingOption = await this.pricingOptionService.get(pricingOptionId);
-    const paymentMethod = await this.paymentMethodService.get(paymentMethodId);
+    const [pricingOption, paymentMethod] = await Promise.all([
+      this.pricingOptionService.get(pricingOptionId),
+      this.paymentMethodService.get(paymentMethodId),
+    ]);
     const partner = await this.dataSource
       .createQueryBuilder(Partner, "partner")
       .innerJoinAndSelect(User, "user", "user.partnerId = partner.id")
@@ -93,6 +135,10 @@ export class ParkingLocationService {
           partner: true,
           paymentMethod: true,
           pricingOption: true,
+          parkingSlots: {
+            parkingLocation: false,
+            services: true,
+          },
         },
         where: { id },
       });
@@ -124,8 +170,14 @@ export class ParkingLocationService {
     }
   }
 
-  async remove(id: number) {
+  async remove(id: number, partnerId?: number) {
     try {
+      if (partnerId) {
+        const parkingLocation = await this.findOne(id, partnerId);
+        if (!parkingLocation) {
+          throw new NotFoundException("Parking location not found");
+        }
+      }
       const deleteResult = await this.parkingLocationRepository.delete(id);
       if (deleteResult.affected) {
         return "Successfully delete parking location";
