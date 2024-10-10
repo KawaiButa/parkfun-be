@@ -59,16 +59,17 @@ export class PartnerService {
   }
 
   async update(id: number, updatePartnerDto: UpdatePartnerDto) {
-    const partnerEntity = await this.partnerRepository.findOne({
-      where: { id },
-      relations: {
-        user: true,
-        type: true,
-      },
-    });
-
     const { phoneNumber, typeId, name, ...data } = updatePartnerDto;
-    const partnerType = await this.partnerTypeService.get({ id: typeId });
+    const [partnerEntity, partnerType] = await Promise.all([
+      this.partnerRepository.findOne({
+        where: { id },
+        relations: {
+          user: true,
+          type: true,
+        },
+      }),
+      this.partnerTypeService.get({ id: typeId }),
+    ]);
     const partner = await this.partnerRepository.preload({
       ...partnerEntity,
       ...data,

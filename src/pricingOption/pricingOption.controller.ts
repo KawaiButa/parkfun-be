@@ -6,7 +6,7 @@ export class PricingOptionController {
   constructor(private pricingOptionService: PricingOptionService) {}
 
   @Get()
-  async getAll() {
-    return await this.pricingOptionService.getAll();
+  getAll() {
+    return this.pricingOptionService.getAll();
   }
 }

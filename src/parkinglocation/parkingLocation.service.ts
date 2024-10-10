@@ -19,8 +19,10 @@ export class ParkingLocationService {
   ) {}
   async create(userId: number, createParkingLocationDto: CreateParkingLocationDto) {
     const { pricingOptionId, paymentMethodId, images } = createParkingLocationDto;
-    const pricingOption = await this.pricingOptionService.get(pricingOptionId);
-    const paymentMethod = await this.paymentMethodService.get(paymentMethodId);
+    const [pricingOption, paymentMethod] = await Promise.all([
+      this.pricingOptionService.get(pricingOptionId),
+      this.paymentMethodService.get(paymentMethodId),
+    ]);
     const partner = await this.dataSource
       .createQueryBuilder(Partner, "partner")
       .innerJoinAndSelect(User, "user", "user.partnerId = partner.id")
@@ -99,8 +101,14 @@ export class ParkingLocationService {
     }
   }
 
-  async remove(id: number) {
+  async remove(id: number, partnerId?: number) {
     try {
+      if (partnerId) {
+        const parkingLocation = await this.findOne(id, partnerId);
+        if (!parkingLocation) {
+          throw new NotFoundException("Parking location not found");
+        }
+      }
       const deleteResult = await this.parkingLocationRepository.delete(id);
       if (deleteResult.affected) {
         return "Successfully delete parking location";
@@ -109,7 +117,6 @@ export class ParkingLocationService {
       }
     } catch (err) {
       if (err instanceof QueryFailedError) {
-        console.log(err.message);
         throw new BadRequestException(
           "Parking location still associated with some parking slot. Please delete associated parking slot first"
         );

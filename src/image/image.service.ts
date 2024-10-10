@@ -9,7 +9,7 @@ export class ImageService {
 
   async create(data: Pick<Image, "url">): Promise<Image> {
     const image = this.imageRepository.create(data);
-    this.imageRepository.save(image);
+    await this.imageRepository.save(image);
     return image;
   }
   async get(id: number): Promise<Image> {

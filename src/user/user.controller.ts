@@ -9,26 +9,26 @@ import RolesGuard from "src/role/role.guard";
 export class UserController {
   constructor(private userService: UserService) {}
   @Get()
-  async getAll() {
-    return await this.userService.getAll();
+  getAll() {
+    return this.userService.getAll();
   }
 
   @Get(":id")
-  async getBy(@Param("id") id: number) {
-    return await this.userService.getOne(id);
+  getBy(@Param("id") id: number) {
+    return this.userService.getOne(id);
   }
   @Post()
-  async create(@Body() body: CreateUserDto) {
-    return await this.userService.create(body);
+  create(@Body() body: CreateUserDto) {
+    return this.userService.create(body);
   }
 
   @Patch(":id")
-  async update(@Param("id") id: number, @Body() body: UpdateUserDto) {
-    return await this.userService.update(id, body);
+  update(@Param("id") id: number, @Body() body: UpdateUserDto) {
+    return this.userService.update(id, body);
   }
 
   @Delete(":id")
-  async delete(@Param("id") id: number) {
-    await this.userService.delete(id);
+  delete(@Param("id") id: number) {
+    this.userService.delete(id);
   }
 }

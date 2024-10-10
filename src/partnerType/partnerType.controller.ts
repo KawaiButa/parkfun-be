@@ -5,7 +5,7 @@ import { PartnerTypeService } from "./partnerType.service";
 export class PartnerTypeController {
   constructor(private readonly partnerTypeService: PartnerTypeService) {}
   @Get()
-  async getAll() {
-    return await this.partnerTypeService.getAll();
+  getAll() {
+    return this.partnerTypeService.getAll();
   }
 }

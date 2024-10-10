@@ -6,7 +6,7 @@ export class ParkingSlotTypeController {
   constructor(private parkingSlotTypeService: ParkingSlotTypeService) {}
 
   @Get()
-  async getAll() {
-    return await this.parkingSlotTypeService.getAll();
+  getAll() {
+    return this.parkingSlotTypeService.getAll();
   }
 }
