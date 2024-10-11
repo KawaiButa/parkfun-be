@@ -1,7 +1,16 @@
 import { IsNumber, IsOptional, IsString, IsUrl } from "class-validator";
 import { PartnerType } from "src/partnerType/partnerType.entity";
 import { User } from "src/user/user.entity";
-import { Column, Entity, JoinColumn, ManyToOne, OneToOne, PrimaryGeneratedColumn } from "typeorm";
+import {
+  Column,
+  CreateDateColumn,
+  DeleteDateColumn,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  OneToOne,
+  PrimaryGeneratedColumn,
+} from "typeorm";
 
 @Entity()
 export class Partner {
@@ -29,4 +38,10 @@ export class Partner {
 
   @OneToOne(() => User, (user) => user.partner, { cascade: true, eager: true })
   user: User;
+
+  @CreateDateColumn()
+  createAt: Date;
+
+  @DeleteDateColumn()
+  deleteAt: Date;
 }

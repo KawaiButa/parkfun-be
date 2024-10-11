@@ -3,7 +3,16 @@ import { IsEmail, IsNotEmpty, IsString } from "class-validator";
 import { Image } from "src/image/image.entity";
 import { Partner } from "src/partner/partner.entity";
 import { Role } from "src/role/role.entity";
-import { Column, Entity, JoinColumn, ManyToOne, OneToOne, PrimaryGeneratedColumn } from "typeorm";
+import {
+  Column,
+  CreateDateColumn,
+  DeleteDateColumn,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  OneToOne,
+  PrimaryGeneratedColumn,
+} from "typeorm";
 
 @Entity()
 export class User {
@@ -41,4 +50,10 @@ export class User {
   @OneToOne(() => Image, (image) => image.user, { cascade: true })
   @JoinColumn()
   image: Image;
+
+  @CreateDateColumn()
+  createAt: Date;
+
+  @DeleteDateColumn()
+  deleteAt: Date;
 }
