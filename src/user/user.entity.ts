@@ -35,7 +35,7 @@ export class User {
   @JoinColumn()
   role: Role;
 
-  @OneToOne(() => Partner, (partner) => partner.user)
+  @OneToOne(() => Partner, (partner) => partner.user, { onUpdate: "CASCADE" })
   @JoinColumn()
   partner: Partner;
 

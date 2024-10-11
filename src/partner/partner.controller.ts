@@ -10,27 +10,27 @@ export class PartnerController {
   constructor(private readonly partnerService: PartnerService) {}
 
   @Post()
-  async create(@Body() createPartnerDto: CreatePartnerDto) {
-    return await this.partnerService.create(createPartnerDto);
+  create(@Body() createPartnerDto: CreatePartnerDto) {
+    return this.partnerService.create(createPartnerDto);
   }
 
   @Get()
-  async findAll() {
-    return await this.partnerService.findAll();
+  findAll() {
+    return this.partnerService.findAll();
   }
 
   @Get(":id")
-  async findOne(@Param("id") id: number) {
-    return await this.partnerService.findOneById(id);
+  findOne(@Param("id") id: number) {
+    return this.partnerService.findOneById(id);
   }
 
   @Patch(":id")
-  async update(@Param("id") id: string, @Body() updatePartnerDto: UpdatePartnerDto) {
-    return await this.partnerService.update(+id, updatePartnerDto);
+  update(@Param("id") id: string, @Body() updatePartnerDto: UpdatePartnerDto) {
+    return this.partnerService.update(+id, updatePartnerDto);
   }
 
   @Delete(":id")
-  async remove(@Param("id") id: string) {
-    return await this.partnerService.delete(+id);
+  remove(@Param("id") id: string) {
+    return this.partnerService.delete(+id);
   }
 }

@@ -1,4 +1,4 @@
-import { IsOptional, IsString, IsUrl } from "class-validator";
+import { IsNumber, IsOptional, IsString, IsUrl } from "class-validator";
 import { CreateUserDto } from "src/user/dtos/createUser.dto";
 
 export class CreatePartnerDto extends CreateUserDto {
@@ -9,8 +9,8 @@ export class CreatePartnerDto extends CreateUserDto {
   @IsString()
   description?: string;
 
-  @IsString()
-  type: string;
+  @IsNumber()
+  typeId: number;
 
   @IsOptional()
   @IsString()

@@ -1,7 +1,7 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import { CreateParkingLocationDto } from "./dtos/createParkingLocation.dto";
 import { InjectRepository } from "@nestjs/typeorm";
-import { DataSource, Repository } from "typeorm";
+import { DataSource, QueryFailedError, Repository } from "typeorm";
 import { ParkingLocation } from "./parkingLocation.entity";
 import { PricingOptionService } from "src/pricingOption/pricingOption.service";
 import { PaymentMethodService } from "src/paymentMethod/paymentMethod.service";
@@ -19,8 +19,10 @@ export class ParkingLocationService {
   ) {}
   async create(userId: number, createParkingLocationDto: CreateParkingLocationDto) {
     const { pricingOptionId, paymentMethodId, images } = createParkingLocationDto;
-    const pricingOption = await this.pricingOptionService.get(pricingOptionId);
-    const paymentMethod = await this.paymentMethodService.get(paymentMethodId);
+    const [pricingOption, paymentMethod] = await Promise.all([
+      this.pricingOptionService.get(pricingOptionId),
+      this.paymentMethodService.get(paymentMethodId),
+    ]);
     const partner = await this.dataSource
       .createQueryBuilder(Partner, "partner")
       .innerJoinAndSelect(User, "user", "user.partnerId = partner.id")
@@ -39,6 +41,16 @@ export class ParkingLocationService {
   }
 
   async findAll(partnerId?: number) {
+    if (!partnerId)
+      return this.parkingLocationRepository.find({
+        relations: {
+          partner: true,
+          paymentMethod: true,
+          pricingOption: true,
+          images: true,
+          parkingSlot: true,
+        },
+      });
     return await this.parkingLocationRepository.find({
       where: { partner: { id: partnerId } },
       relations: {
@@ -46,38 +58,69 @@ export class ParkingLocationService {
         paymentMethod: true,
         pricingOption: true,
         images: true,
+        parkingSlot: true,
       },
     });
   }
 
-  async findOne(id: number) {
+  async findOne(id: number, partnerId?: number) {
+    if (!partnerId)
+      return await this.parkingLocationRepository.findOne({
+        relations: {
+          partner: true,
+          paymentMethod: true,
+          pricingOption: true,
+        },
+        where: { id },
+      });
     return await this.parkingLocationRepository.findOne({
       relations: {
         partner: true,
         paymentMethod: true,
         pricingOption: true,
+        images: true,
       },
-      where: { id },
+      where: { id, partner: { id: partnerId } },
     });
   }
 
   async update(id: number, updateData: UpdateParkingLocationDto) {
-    const { images } = updateData;
-    const imagesEntity = images.map((image) => ({ url: image }));
-    const updateResult = await this.parkingLocationRepository.update(id, { ...updateData, images: imagesEntity });
-    if (updateResult.affected) {
-      return await this.parkingLocationRepository.findOne({ where: { id } });
+    const { paymentMethodId, pricingOptionId, ...data } = updateData;
+    const paymentMethodEntity = await this.paymentMethodService.get(paymentMethodId);
+    const pricingOptionEntity = await this.pricingOptionService.get(pricingOptionId);
+    const updateResult = await this.parkingLocationRepository.save({
+      ...data,
+      id,
+      paymentMethod: paymentMethodEntity,
+      pricingOption: pricingOptionEntity,
+    });
+    if (updateResult) {
+      return updateResult;
     } else {
       throw new NotFoundException("Parking location not found");
     }
   }
 
-  async remove(id: number) {
-    const deleteResult = await this.parkingLocationRepository.delete(id);
-    if (deleteResult.affected) {
-      return "Successfully delete parking location";
-    } else {
-      throw new NotFoundException("Parking location not found");
+  async remove(id: number, partnerId?: number) {
+    try {
+      if (partnerId) {
+        const parkingLocation = await this.findOne(id, partnerId);
+        if (!parkingLocation) {
+          throw new NotFoundException("Parking location not found");
+        }
+      }
+      const deleteResult = await this.parkingLocationRepository.delete(id);
+      if (deleteResult.affected) {
+        return "Successfully delete parking location";
+      } else {
+        throw new NotFoundException("Parking location not found");
+      }
+    } catch (err) {
+      if (err instanceof QueryFailedError) {
+        throw new BadRequestException(
+          "Parking location still associated with some parking slot. Please delete associated parking slot first"
+        );
+      } else throw err;
     }
   }
 }

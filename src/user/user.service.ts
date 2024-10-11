@@ -17,8 +17,10 @@ export class UserService {
   ) {}
   async create(createUserDto: CreateUserDto): Promise<User> {
     const { email, role, phoneNumber, image } = createUserDto;
-    const roleEntity = await this.roleService.getOneBy({ name: role });
-    const imageEntity = await this.imageService.create({ url: image ?? constant.DEFAULT_AVATAR_URL });
+    const [roleEntity, imageEntity] = await Promise.all([
+      this.roleService.getOneBy({ name: role }),
+      this.imageService.create({ url: image ?? constant.DEFAULT_AVATAR_URL }),
+    ]);
     if (!roleEntity) {
       throw new BadRequestException("Role does not exist");
     }
@@ -80,6 +82,7 @@ export class UserService {
       where: { id },
       relations: {
         role: true,
+        image: true,
       },
     });
   }
