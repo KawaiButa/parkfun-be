@@ -21,7 +21,11 @@ export class ParkingLocationController {
   }
   @Get()
   @UseGuards(RolesGuard())
-  findAll(@Req() request: Request & { user: User }, @Query() query: SearchParkingLocationDto) {
+  findAll(
+    @Req() request: Request & { user: User },
+    @Query()
+    query: SearchParkingLocationDto
+  ) {
     const { user } = request;
     if (!user) return this.parkingLocationService.search(query);
     if (!user.partner) return this.parkingLocationService.findAll();

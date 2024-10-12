@@ -1,55 +1,56 @@
-import { IsBoolean, IsNotEmpty, IsNumber, IsOptional, IsString } from "class-validator";
+import { IsBoolean, IsNumber, IsOptional, IsString, ValidateIf } from "class-validator";
 
 export class SearchParkingLocationDto {
-  @IsNotEmpty()
   @IsNumber()
-  lat: number;
+  @IsOptional()
+  public lat?: number;
 
-  @IsNotEmpty()
   @IsNumber()
-  lng: number;
+  @IsOptional()
+  public lng?: number;
 
-  @IsNotEmpty()
+  @ValidateIf((obj) => obj.lat && obj.lng)
   @IsNumber()
-  radius: number;
+  @IsOptional()
+  public radius: number;
 
   @IsOptional()
   @IsNumber()
-  startAt?: number;
+  public startAt?: number;
 
   @IsOptional()
   @IsNumber()
-  endAt?: number;
+  public endAt?: number;
 
   @IsOptional()
   @IsBoolean()
-  isAvailable?: boolean;
+  public isAvailable?: boolean;
 
   @IsOptional()
   @IsNumber()
-  priceStartAt?: number;
+  public priceStartAt?: number;
 
   @IsOptional()
   @IsNumber()
-  priceEndAt?: number;
+  public priceEndAt?: number;
 
   @IsOptional()
   @IsNumber()
-  width?: number;
+  public width?: number;
 
   @IsOptional()
   @IsNumber()
-  length?: number;
+  public length?: number;
 
   @IsOptional()
   @IsNumber()
-  height?: number;
+  public height?: number;
 
   @IsOptional()
   @IsNumber()
-  type?: number;
+  public type?: number;
 
   @IsOptional()
   @IsString()
-  services?: string;
+  public services?: string;
 }
