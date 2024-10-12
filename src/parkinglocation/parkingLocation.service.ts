@@ -1,16 +1,16 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
-import { CreateParkingLocationDto } from "./dtos/createParkingLocation.dto";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Between, DataSource, FindOptionsRelations, FindOptionsWhere, QueryFailedError, Repository } from "typeorm";
-import { ParkingLocation } from "./parkingLocation.entity";
+import { Brackets, DataSource, FindOptionsRelations, FindOptionsWhere, QueryFailedError, Repository } from "typeorm";
 import { PricingOptionService } from "src/pricingOption/pricingOption.service";
 import { PaymentMethodService } from "src/paymentMethod/paymentMethod.service";
 import { Partner } from "src/partner/partner.entity";
 import { User } from "src/user/user.entity";
-import { UpdateParkingLocationDto } from "./dtos/updateParkingLocation.dto";
+import { omitBy, isUndefined } from "lodash";
+import { CreateParkingLocationDto } from "./dtos/createParkingLocation.dto";
 import { SearchParkingLocationDto } from "./dtos/searchParkingLocation.dto";
+import { UpdateParkingLocationDto } from "./dtos/updateParkingLocation.dto";
+import { ParkingLocation } from "./parkingLocation.entity";
 import { ParkingSlot } from "src/parkingSlot/parkingSlot.entity";
-import { omitBy, isUndefined, uniqBy } from "lodash";
 @Injectable()
 export class ParkingLocationService {
   constructor(
@@ -20,27 +20,99 @@ export class ParkingLocationService {
     private dataSource: DataSource
   ) {}
   async search(searchParkingLocationDto: SearchParkingLocationDto) {
-    const { lat, lng, services, radius, priceEndAt, priceStartAt, ...query } = searchParkingLocationDto;
+    const {
+      lat,
+      lng,
+      services,
+      startAt = 0,
+      endAt = 86400,
+      width = 0,
+      length = 0,
+      height = 0,
+      radius = 10,
+      priceStartAt = 0,
+      priceEndAt = 10000,
+      ...query
+    } = searchParkingLocationDto;
     const filteredQuery = omitBy(query, isUndefined);
-    const data = await this.dataSource
-      .createQueryBuilder(ParkingSlot, "parkingSlot")
-      .innerJoinAndSelect("parkingSlot.services", "service", "service.id IN (:...serviceIds)", {
-        serviceIds: services.split("-"),
+    let queryBuilder = this.parkingLocationRepository
+      .createQueryBuilder("parkingLocation")
+      .innerJoinAndSelect("parkingLocation.parkingSlots", "parkingSlot");
+
+    queryBuilder = queryBuilder
+      .andWhere(`parkingSlot.price BETWEEN ${priceStartAt} AND ${priceEndAt}`)
+      .andWhere((qb) => {
+        const subQuery = qb
+          .subQuery()
+          .select("parkingSlot2.id")
+          .from(ParkingSlot, "parkingSlot2")
+          .where(filteredQuery)
+          .getQuery();
+        return "parkingSlot.id IN " + subQuery;
+      });
+    const limmitedStartAt = startAt % 86400;
+    const limitedEndAt = endAt & 86400;
+    queryBuilder = queryBuilder.where(
+      new Brackets((qb) => {
+        // Case 1: Location time range doesn't cross midnight
+        qb.where(" :startAt >= parkingSlot.startAt AND :endAt <= parkingSlot.endAt", {
+          startAt: limmitedStartAt,
+          endAt: limitedEndAt,
+        }).orWhere(
+          new Brackets((qb2) => {
+            qb2
+              .where("parkingSlot.startAt > parkingSlot.endAt")
+              .andWhere(
+                new Brackets((qb3) => {
+                  qb3.where(":startAt >= parkingSlot.startAt").orWhere(":startAt < parkingSlot.endAt");
+                })
+              )
+              .andWhere(
+                new Brackets((qb4) => {
+                  qb4.where(":endAt > parkingSlot.startAt").orWhere(":endAt <= parkingSlot.endAt");
+                })
+              )
+              .andWhere(
+                new Brackets((qb5) => {
+                  qb5
+                    .where(":startAt < :endAt")
+                    .orWhere(":startAt >= parkingSlot.startAt")
+                    .orWhere(":endAt <= parkingSlot.endAt");
+                })
+              );
+          }),
+          {
+            startAt: limitedEndAt,
+            endAt: 86400,
+          }
+        );
       })
-      .where({
-        ...filteredQuery,
-        price: Between(priceStartAt, priceEndAt),
-      })
-      .innerJoinAndSelect("parkingSlot.parkingLocation", "parkingLocation")
-      .innerJoinAndSelect("parkingLocation.images", "images")
-      .getMany();
-    const filteredData = data.filter(({ services: serviceList, parkingLocation }) => {
-      const distance = this.calculateDistance({ lat, lng }, { lat: parkingLocation.lat, lng: parkingLocation.lng });
-      if (distance > radius) return false;
-      return serviceList.length === services.split("-").length;
-    });
-    const parkingLocationList = filteredData.map(({ parkingLocation }) => parkingLocation);
-    return uniqBy(parkingLocationList, "id");
+    );
+
+    queryBuilder = queryBuilder.andWhere("parkingSlot.width >= :width", { width });
+    queryBuilder = queryBuilder.andWhere("parkingSlot.length >= :length", { length });
+    queryBuilder = queryBuilder.andWhere("parkingSlot.height >= :height", { height });
+    if (services) {
+      const serviceIds = services.split("-");
+      queryBuilder = queryBuilder
+        .leftJoinAndSelect("parkingSlot.services", "service")
+        .where("service.id IN (:...serviceIds)", { serviceIds });
+    }
+    queryBuilder = queryBuilder
+      .innerJoinAndSelect("parkingLocation.images", "image")
+      .innerJoinAndSelect("parkingLocation.partner", "partner")
+      .innerJoinAndSelect(User, "user", "user.partnerId = partner.id")
+      .innerJoinAndSelect("parkingSlot.type", "type");
+    const data = await queryBuilder.getMany();
+    if (lat && lng && radius) {
+      const filteredData = data.filter((parkingLocation) => {
+        const distance = this.calculateDistance({ lat, lng }, { lat: parkingLocation.lat, lng: parkingLocation.lng });
+        if (distance > radius) return false;
+        return true;
+      });
+      return filteredData;
+    }
+    return data;
   }
   async create(userId: number, createParkingLocationDto: CreateParkingLocationDto) {
     const { pricingOptionId, paymentMethodId, images } = createParkingLocationDto;
@@ -66,25 +138,20 @@ export class ParkingLocationService {
   }
 
   async findAll(partnerId?: number) {
+    const relations = {
+      partner: true,
+      paymentMethod: true,
+      pricingOption: true,
+      images: true,
+      parkingSlots: true,
+    };
     if (!partnerId)
       return this.parkingLocationRepository.find({
-        relations: {
-          partner: true,
-          paymentMethod: true,
-          pricingOption: true,
-          images: true,
-          parkingSlots: true,
-        },
+        relations,
       });
     return await this.parkingLocationRepository.find({
       where: { partner: { id: partnerId } },
-      relations: {
-        partner: true,
-        paymentMethod: true,
-        pricingOption: true,
-        images: true,
-        parkingSlots: true,
-      },
+      relations,
     });
   }
 
@@ -133,7 +200,7 @@ export class ParkingLocationService {
           },
         });
         if (!isDeleable) {
-          throw new NotFoundException("You are not authorized to remove this location.");
+          throw new NotFoundException("You are not authorized to remove this parkingSlot.");
         }
       }
       const deleteResult = await this.parkingLocationRepository.delete(id);
