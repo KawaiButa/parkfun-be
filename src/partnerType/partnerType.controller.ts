@@ -1,11 +1,12 @@
-import { Controller, Get } from "@nestjs/common";
+import { Controller, Get, Query } from "@nestjs/common";
 import { PartnerTypeService } from "./partnerType.service";
+import { PageOptionsDto } from "src/utils/dtos/pageOption.dto";
 
 @Controller("partner-type")
 export class PartnerTypeController {
   constructor(private readonly partnerTypeService: PartnerTypeService) {}
   @Get()
-  getAll() {
-    return this.partnerTypeService.getAll();
+  getAll(@Query() pageOptionsDto: PageOptionsDto) {
+    return this.partnerTypeService.getAll(pageOptionsDto);
   }
 }

@@ -1,12 +1,15 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import { CreateParkingSlotDto } from "./dtos/createParkingSlot.dto";
 import { InjectRepository } from "@nestjs/typeorm";
-import { DataSource, Repository } from "typeorm";
+import { DataSource, FindOptionsWhere, Repository } from "typeorm";
 import { ParkingSlot } from "./parkingSlot.entity";
 import { ParkingSlotTypeService } from "src/parkingSlotType/parkingSlotType.service";
 import { ParkingService } from "src/parkingService/parkingService.entity";
 import { ParkingLocationService } from "src/parkinglocation/parkingLocation.service";
 import { Image } from "src/image/image.entity";
+import { PageOptionsDto } from "src/utils/dtos/pageOption.dto";
+import { PageDto } from "src/utils/dtos/page.dto";
+import { PageMetaDto } from "src/utils/dtos/pageMeta.dto";
 
 @Injectable()
 export class ParkingSlotService {
@@ -42,25 +45,36 @@ export class ParkingSlotService {
     return await this.parkingSlotRepository.save(parkingSlots);
   }
 
-  async findAll(partnerId?: number) {
+  async findAll(pageOptionsDto: PageOptionsDto, partnerId?: number): Promise<PageDto<ParkingSlot>> {
+    const { take, skip, orderBy, order } = pageOptionsDto;
+    const where: FindOptionsWhere<ParkingSlot> = {};
     if (partnerId) {
-      return await this.parkingSlotRepository.find({
-        where: {
-          parkingLocation: {
-            partner: { id: partnerId },
-          },
-        },
-        relations: {
-          type: true,
-          services: true,
-          images: true,
-          parkingLocation: {
-            paymentMethod: true,
-          },
-        },
-      });
+      where.parkingLocation = { partner: { id: partnerId } };
     }
-    return await this.parkingSlotRepository.find();
+    const data = await this.parkingSlotRepository.find({
+      where: {
+        parkingLocation: {
+          partner: { id: partnerId },
+        },
+      },
+      relations: {
+        type: true,
+        services: true,
+        images: true,
+        parkingLocation: {
+          paymentMethod: true,
+        },
+      },
+      order: {
+        [orderBy as keyof ParkingSlot]: order,
+      },
+      take,
+      skip,
+    });
+
+    const itemCount = data.length;
+    const pageMetaDto = new PageMetaDto({ itemCount, pageOptionsDto });
+    return { data, meta: pageMetaDto };
   }
 
   async findOne(id: number, partnerId?: number) {
