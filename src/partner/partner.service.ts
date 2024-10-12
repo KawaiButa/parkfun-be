@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import { CreatePartnerDto } from "./dto/createPartner.dto";
 import { UpdatePartnerDto } from "./dto/updatePartner.dto";
 import { InjectRepository } from "@nestjs/typeorm";
@@ -7,6 +7,10 @@ import { Partner } from "./partner.entity";
 import { PartnerTypeService } from "src/partnerType/partnerType.service";
 import { UserService } from "src/user/user.service";
 import * as bcrypt from "bcrypt";
+import { PageDto } from "src/utils/dtos/page.dto";
+import { PageOptionsDto } from "src/utils/dtos/pageOption.dto";
+import { isKeyOf } from "src/utils/utils";
+import { PageMetaDto } from "src/utils/dtos/pageMeta.dto";
 @Injectable()
 export class PartnerService {
   constructor(
@@ -38,8 +42,19 @@ export class PartnerService {
     }
   }
 
-  async findAll() {
-    return await this.getFullPartnerQuery().getMany();
+  async findAll(pageOptionsDto: PageOptionsDto): Promise<PageDto<Partner>> {
+    const { skip, take, orderBy, order } = pageOptionsDto;
+    if (!isKeyOf<Partner>(orderBy)) throw new BadRequestException("The orderBy parameter must be a key in partner.");
+    const data = await this.partnerRepository.find({
+      skip: skip,
+      take: take,
+      order: {
+        [orderBy]: order,
+      },
+    });
+    const itemCount = data.length;
+    const pageMetaDto = new PageMetaDto({ itemCount, pageOptionsDto });
+    return new PageDto(data, pageMetaDto);
   }
 
   async findOneById(id: number) {

@@ -1,22 +1,24 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from "@nestjs/common";
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query } from "@nestjs/common";
 import { PartnerService } from "./partner.service";
 import { CreatePartnerDto } from "./dto/createPartner.dto";
 import { UpdatePartnerDto } from "./dto/updatePartner.dto";
-import { AuthGuard } from "@nestjs/passport";
+import { PageOptionsDto } from "src/utils/dtos/pageOption.dto";
+import RolesGuard from "src/role/role.guard";
 
 @Controller("partner")
-@UseGuards(AuthGuard("jwt"))
 export class PartnerController {
   constructor(private readonly partnerService: PartnerService) {}
 
   @Post()
+  @UseGuards(RolesGuard("admin"))
   create(@Body() createPartnerDto: CreatePartnerDto) {
     return this.partnerService.create(createPartnerDto);
   }
 
   @Get()
-  findAll() {
-    return this.partnerService.findAll();
+  @UseGuards(RolesGuard("admin"))
+  findAll(@Query() pageOptionsDto: PageOptionsDto) {
+    return this.partnerService.findAll(pageOptionsDto);
   }
 
   @Get(":id")
@@ -30,6 +32,7 @@ export class PartnerController {
   }
 
   @Delete(":id")
+  @UseGuards(RolesGuard("admin"))
   remove(@Param("id") id: string) {
     return this.partnerService.delete(+id);
   }

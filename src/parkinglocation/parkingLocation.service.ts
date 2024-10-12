@@ -11,6 +11,10 @@ import { SearchParkingLocationDto } from "./dtos/searchParkingLocation.dto";
 import { UpdateParkingLocationDto } from "./dtos/updateParkingLocation.dto";
 import { ParkingLocation } from "./parkingLocation.entity";
 import { ParkingSlot } from "src/parkingSlot/parkingSlot.entity";
+import { PageDto } from "src/utils/dtos/page.dto";
+import { PageOptionsDto } from "src/utils/dtos/pageOption.dto";
+import { PageMetaDto } from "src/utils/dtos/pageMeta.dto";
+import { isNumber } from "class-validator";
 @Injectable()
 export class ParkingLocationService {
   constructor(
@@ -19,7 +23,10 @@ export class ParkingLocationService {
     private paymentMethodService: PaymentMethodService,
     private dataSource: DataSource
   ) {}
-  async search(searchParkingLocationDto: SearchParkingLocationDto) {
+  async search(
+    searchParkingLocationDto: SearchParkingLocationDto,
+    pageOptionsDto: PageOptionsDto
+  ): Promise<PageDto<ParkingLocation>> {
     const {
       lat,
       lng,
@@ -34,6 +41,7 @@ export class ParkingLocationService {
       priceEndAt = 10000,
       ...query
     } = searchParkingLocationDto;
+    const { skip, take } = pageOptionsDto;
     const filteredQuery = omitBy(query, isUndefined);
     let queryBuilder = this.parkingLocationRepository
       .createQueryBuilder("parkingLocation")
@@ -54,7 +62,6 @@ export class ParkingLocationService {
     const limitedEndAt = endAt & 86400;
     queryBuilder = queryBuilder.where(
       new Brackets((qb) => {
-        // Case 1: Location time range doesn't cross midnight
         qb.where(" :startAt >= parkingSlot.startAt AND :endAt <= parkingSlot.endAt", {
           startAt: limmitedStartAt,
           endAt: limitedEndAt,
@@ -103,16 +110,18 @@ export class ParkingLocationService {
       .innerJoinAndSelect("parkingLocation.partner", "partner")
       .innerJoinAndSelect(User, "user", "user.partnerId = partner.id")
       .innerJoinAndSelect("parkingSlot.type", "type");
-    const data = await queryBuilder.getMany();
-    if (lat && lng && radius) {
-      const filteredData = data.filter((parkingLocation) => {
+    queryBuilder = queryBuilder.take(take).skip(skip);
+    let data = await queryBuilder.getMany();
+    if (isNumber(lat) && isNumber(lng)) {
+      data = data.filter((parkingLocation) => {
         const distance = this.calculateDistance({ lat, lng }, { lat: parkingLocation.lat, lng: parkingLocation.lng });
         if (distance > radius) return false;
         return true;
       });
-      return filteredData;
     }
-    return data;
+    const itemCount = data.length;
+    const pageMetaDto = new PageMetaDto({ itemCount, pageOptionsDto });
+    return new PageDto(data, pageMetaDto);
   }
   async create(userId: number, createParkingLocationDto: CreateParkingLocationDto) {
     const { pricingOptionId, paymentMethodId, images } = createParkingLocationDto;
@@ -137,7 +146,7 @@ export class ParkingLocationService {
     return await this.parkingLocationRepository.save(parkingLocation);
   }
 
-  async findAll(partnerId?: number) {
+  async findAll(pageOptionsDto: PageOptionsDto, partnerId?: number) {
     const relations = {
       partner: true,
       paymentMethod: true,
@@ -151,6 +160,8 @@ export class ParkingLocationService {
       });
     return await this.parkingLocationRepository.find({
       where: { partner: { id: partnerId } },
+      take: pageOptionsDto.take,
+      skip: pageOptionsDto.skip,
       relations,
     });
   }

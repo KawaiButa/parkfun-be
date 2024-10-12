@@ -51,9 +51,10 @@ export class ParkingSlot {
   parkingLocation: ParkingLocation;
 
   @ManyToMany(() => ParkingService, (service) => service.parkingSlots)
+  @JoinTable({ name: "parking_slot_parking_service" })
   services: ParkingService[];
 
   @ManyToMany(() => Image, (image) => image.parkingSlot, { cascade: true })
-  @JoinTable()
+  @JoinTable({ name: "parking_slot_image" })
   images: Image[];
 }

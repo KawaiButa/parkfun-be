@@ -6,6 +6,7 @@ import { AuthGuard } from "@nestjs/passport";
 import RolesGuard from "src/role/role.guard";
 import { User } from "src/user/user.entity";
 import { SearchParkingLocationDto } from "./dtos/searchParkingLocation.dto";
+import { PageOptionsDto } from "src/utils/dtos/pageOption.dto";
 
 @Controller("parking-location")
 export class ParkingLocationController {
@@ -20,16 +21,16 @@ export class ParkingLocationController {
     return this.parkingLocationService.create(user.id, createParkingLocationDto);
   }
   @Get()
-  @UseGuards(RolesGuard())
+  // @UseGuards(RolesGuard())
   findAll(
     @Req() request: Request & { user: User },
-    @Query()
-    query: SearchParkingLocationDto
+    @Query() searchQuery: SearchParkingLocationDto,
+    @Query() pageOptions: PageOptionsDto
   ) {
     const { user } = request;
-    if (!user) return this.parkingLocationService.search(query);
-    if (!user.partner) return this.parkingLocationService.findAll();
-    return this.parkingLocationService.findAll(user.partner.id);
+    if (!user) return this.parkingLocationService.search(searchQuery, pageOptions);
+    if (!user.partner) return this.parkingLocationService.findAll(pageOptions);
+    return this.parkingLocationService.findAll(pageOptions, user.partner.id);
   }
 
   @Get(":id")
