@@ -15,15 +15,17 @@ export default class ParkingSlot1698765440 implements Seeder {
     const parkingServiceRepository = dataSource.getRepository(ParkingService);
 
     const parkingSlotFactory = factoryManager.get(ParkingSlot);
-    const parkingLocations = await parkingLocationRepository.find();
-    const parkingSlotType = await parkingSlotTypeRepository.find();
-    const parkingSerivces = await parkingServiceRepository.find();
+    const [parkingLocations, parkingSlotTypes, parkingServices] = await Promise.all([
+      parkingLocationRepository.find(),
+      parkingSlotTypeRepository.find(),
+      parkingServiceRepository.find(),
+    ]);
     const parkingSlots = await Promise.all(
       parkingLocations.flatMap((parkingLocation) => {
-        const services = take(shuffle(parkingSerivces), Math.floor(Math.random() * parkingSerivces.length));
+        const services = take(shuffle(parkingServices), Math.floor(Math.random() * parkingServices.length));
         return parkingSlotFactory.saveMany(10, {
           parkingLocation: parkingLocation,
-          type: parkingSlotType[0],
+          type: parkingSlotTypes[0],
           isAvailable: true,
           services: services,
         });

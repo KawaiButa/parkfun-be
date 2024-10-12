@@ -15,20 +15,22 @@ export default class UserSeeder1698765441 implements Seeder {
     const imageRepository = dataSource.getRepository(Image);
 
     const userRepository = dataSource.getRepository(User);
-    const userRole = await roleRepository.findOne({ where: { name: "user" } });
+    const [adminRole, userRole, partnerRole] = await roleRepository.find({
+      order: {
+        name: "ASC",
+      },
+    });
+
     await userRepository.save(
       userRepository.create({
         name: "admin",
         email: "admin@gmail.com",
         password: bcrypt.hashSync("1234567890", 10),
         phoneNumber: "1234567890",
-        role: userRole,
+        role: adminRole,
       })
     );
-
-    const partnerRole = await roleRepository.findOne({ where: { name: "partner" } });
-    const images = await imageRepository.find();
-    const partners = await partnerRepository.find();
+    const [images, partners] = await Promise.all([imageRepository.find(), partnerRepository.find()]);
     partners.flatMap((partner) => {
       return Array(10).map(async () => {
         return await userFactory.save({

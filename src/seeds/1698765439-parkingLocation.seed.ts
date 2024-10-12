@@ -11,9 +11,11 @@ export default class ParkingLocation1698765439 implements Seeder {
     const paymentMethodRepository = dataSource.getRepository(PaymentMethod);
     const pricingOptionRepository = dataSource.getRepository(PricingOption);
 
-    const paymentMethods = await paymentMethodRepository.find();
-    const pricingOptions = await pricingOptionRepository.find();
-    const partners = await partnerRepository.find();
+    const [paymentMethods, pricingOptions, partners] = await Promise.all([
+      paymentMethodRepository.find(),
+      pricingOptionRepository.find(),
+      partnerRepository.find(),
+    ]);
     const parkingLocationFactory = factoryManager.get(ParkingLocation);
 
     const parkingLocations = await Promise.all(

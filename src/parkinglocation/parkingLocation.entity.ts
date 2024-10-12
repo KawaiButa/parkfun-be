@@ -56,7 +56,7 @@ export class ParkingLocation {
   images: Image[];
 
   @OneToMany(() => ParkingSlot, (parkingSlot) => parkingSlot.parkingLocation)
-  parkingSlot: ParkingSlot[];
+  parkingSlots: ParkingSlot[];
 
   @CreateDateColumn()
   createAt: Date;
