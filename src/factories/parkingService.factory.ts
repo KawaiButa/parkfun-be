@@ -1,4 +1,4 @@
-import { ParkingService } from "src/parkingService/parkingSerivce.entity";
+import { ParkingService } from "src/parkingService/parkingService.entity";
 import { setSeederFactory } from "typeorm-extension";
 
 export default setSeederFactory(ParkingService, (faker) => {
