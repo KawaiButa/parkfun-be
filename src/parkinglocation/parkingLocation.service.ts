@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import { CreateParkingLocationDto } from "./dtos/createParkingLocation.dto";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Between, DataSource, QueryFailedError, Repository } from "typeorm";
+import { Between, DataSource, FindOptionsRelations, FindOptionsWhere, QueryFailedError, Repository } from "typeorm";
 import { ParkingLocation } from "./parkingLocation.entity";
 import { PricingOptionService } from "src/pricingOption/pricingOption.service";
 import { PaymentMethodService } from "src/paymentMethod/paymentMethod.service";
@@ -89,23 +89,20 @@ export class ParkingLocationService {
   }
 
   async findOne(id: number, partnerId?: number) {
-    if (!partnerId)
-      return await this.parkingLocationRepository.findOne({
-        relations: {
-          partner: true,
-          paymentMethod: true,
-          pricingOption: true,
-        },
-        where: { id },
-      });
+    const relations: FindOptionsRelations<ParkingLocation> = {
+      partner: true,
+      paymentMethod: true,
+    };
+    const where: FindOptionsWhere<ParkingLocation> = {
+      id,
+    };
+    if (partnerId) {
+      if (partnerId !== -1) where.partner = { id: partnerId };
+      relations.pricingOption = true;
+    }
     return await this.parkingLocationRepository.findOne({
-      relations: {
-        partner: true,
-        paymentMethod: true,
-        pricingOption: true,
-        images: true,
-      },
-      where: { id, partner: { id: partnerId } },
+      relations,
+      where: { id },
     });
   }
 
@@ -129,9 +126,14 @@ export class ParkingLocationService {
   async remove(id: number, partnerId?: number) {
     try {
       if (partnerId) {
-        const parkingLocation = await this.findOne(id, partnerId);
-        if (!parkingLocation) {
-          throw new NotFoundException("Parking location not found");
+        const isDeleable = await this.parkingLocationRepository.findOne({
+          where: {
+            id,
+            partner: { id: partnerId },
+          },
+        });
+        if (!isDeleable) {
+          throw new NotFoundException("You are not authorized to remove this location.");
         }
       }
       const deleteResult = await this.parkingLocationRepository.delete(id);
