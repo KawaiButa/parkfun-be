@@ -31,18 +31,18 @@ export default class UserSeeder1698765441 implements Seeder {
       })
     );
     const [images, partners] = await Promise.all([imageRepository.find(), partnerRepository.find()]);
-    partners.flatMap((partner) => {
-      return Array(10).map(async () => {
-        return await userFactory.save({
+    const partnerUsers = await Promise.all(
+      partners.map((partner) => {
+        return userFactory.save({
           role: partnerRole,
           image: images[Math.floor(Math.random() * images.length)],
           partner: partner,
         });
-      });
-    });
-    const user = userFactory.saveMany(20, {
+      })
+    );
+    const user = await userFactory.saveMany(20, {
       role: userRole,
     });
-    return user;
+    return partnerUsers.concat(user);
   }
 }

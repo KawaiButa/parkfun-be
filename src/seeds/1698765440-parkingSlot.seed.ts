@@ -3,7 +3,7 @@ import { DataSource } from "typeorm";
 import { ParkingLocation } from "src/parkinglocation/parkingLocation.entity";
 import { ParkingSlot } from "src/parkingSlot/parkingSlot.entity";
 import { ParkingSlotType } from "src/parkingSlotType/parkingSlotType.entity";
-import { ParkingService } from "src/parkingService/parkingSerivce.entity";
+import { ParkingService } from "src/parkingService/parkingService.entity";
 import { shuffle, take } from "lodash";
 
 export default class ParkingSlot1698765440 implements Seeder {
@@ -22,7 +22,10 @@ export default class ParkingSlot1698765440 implements Seeder {
     ]);
     const parkingSlots = await Promise.all(
       parkingLocations.flatMap((parkingLocation) => {
-        const services = take(shuffle(parkingServices), Math.floor(Math.random() * parkingServices.length));
+        const services = take(
+          shuffle(parkingServices),
+          Math.floor(Math.random() * parkingServices.length)
+        ) as ParkingService[];
         return parkingSlotFactory.saveMany(10, {
           parkingLocation: parkingLocation,
           type: parkingSlotTypes[0],

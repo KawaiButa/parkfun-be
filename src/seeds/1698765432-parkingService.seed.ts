@@ -1,4 +1,4 @@
-import { ParkingService } from "src/parkingService/parkingSerivce.entity";
+import { ParkingService } from "src/parkingService/parkingService.entity";
 import { DataSource } from "typeorm";
 import { Seeder, SeederFactoryManager } from "typeorm-extension";
 

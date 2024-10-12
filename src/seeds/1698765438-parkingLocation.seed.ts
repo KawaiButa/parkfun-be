@@ -5,7 +5,7 @@ import { PricingOption } from "src/pricingOption/pricingOption.entity";
 import { DataSource } from "typeorm";
 import { Seeder, SeederFactoryManager } from "typeorm-extension";
 
-export default class ParkingLocation1698765439 implements Seeder {
+export default class ParkingLocation1698765438 implements Seeder {
   public async run(dataSource: DataSource, factoryManager: SeederFactoryManager): Promise<any> {
     const partnerRepository = dataSource.getRepository(Partner);
     const paymentMethodRepository = dataSource.getRepository(PaymentMethod);
