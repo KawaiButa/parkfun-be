@@ -1,6 +1,6 @@
 import { Module } from "@nestjs/common";
 import { TypeOrmModule } from "@nestjs/typeorm";
-import { ParkingService } from "./parkingSerivce.entity";
+import { ParkingService } from "./parkingService.entity";
 import { ParkingSerivceService } from "./parkingService.service";
 import { ParkingServiceController } from "./parkingService.controller";
 

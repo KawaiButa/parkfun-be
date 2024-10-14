@@ -1,8 +1,7 @@
-import { ArrayMaxSize, ArrayMinSize, IsAlpha, IsArray, IsNotEmpty, IsNumber, IsString, IsUrl } from "class-validator";
+import { ArrayMaxSize, ArrayMinSize, IsArray, IsNotEmpty, IsNumber, IsString, IsUrl } from "class-validator";
 
 export class CreateParkingLocationDto {
   @IsString()
-  @IsAlpha()
   name: string;
 
   @IsString()
