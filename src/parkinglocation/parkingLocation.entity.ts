@@ -4,7 +4,16 @@ import { ParkingSlot } from "src/parkingSlot/parkingSlot.entity";
 import { Partner } from "src/partner/partner.entity";
 import { PaymentMethod } from "src/paymentMethod/paymentMethod.entity";
 import { PricingOption } from "src/pricingOption/pricingOption.entity";
-import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import {
+  Column,
+  CreateDateColumn,
+  DeleteDateColumn,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from "typeorm";
 
 @Entity()
 export class ParkingLocation {
@@ -48,4 +57,10 @@ export class ParkingLocation {
 
   @OneToMany(() => ParkingSlot, (parkingSlot) => parkingSlot.parkingLocation)
   parkingSlots: ParkingSlot[];
+
+  @CreateDateColumn()
+  createAt: Date;
+
+  @DeleteDateColumn()
+  deleteAt: Date;
 }
