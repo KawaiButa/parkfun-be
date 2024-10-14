@@ -58,6 +58,12 @@ export class CreateUserTable1634567890125 implements MigrationInterface {
             isNullable: true,
             isUnique: true,
           },
+          {
+            name: "stripeCustomerId",
+            type: "varchar",
+            isNullable: true,
+            isUnique: true,
+          },
         ],
       }),
       true

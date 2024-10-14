@@ -14,6 +14,8 @@ import { ParkingSlotModule } from "./parkingSlot/parkingSlot.module";
 import { ParkingServiceModule } from "./parkingService/parkingService.module";
 import { PaymentMethodModule } from "./paymentMethod/paymentMethod.module";
 import { PricingOptionModule } from "./pricingOption/pricingOption.module";
+import { BookingModule } from "./booking/booking.module";
+import { PaymentRecordModule } from "./paymentRecord/paymentRecord.module";
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -25,6 +27,10 @@ import { PricingOptionModule } from "./pricingOption/pricingOption.module";
         DB_NAME: Joi.string().required(),
         PORT: Joi.number(),
         IS_PRODUCTION: Joi.boolean().required(),
+        STRIPE_SECRET_KEY: Joi.string(),
+        STRIPE_CURRENCY: Joi.string(),
+        FRONTEND_URL: Joi.string(),
+        STRIPE_WEBHOOK_SECRET: Joi.string(),
       }),
     }),
     DatabaseModule,
@@ -38,6 +44,8 @@ import { PricingOptionModule } from "./pricingOption/pricingOption.module";
     ParkingServiceModule,
     PaymentMethodModule,
     PricingOptionModule,
+    BookingModule,
+    PaymentRecordModule,
   ],
   controllers: [AppController],
   providers: [AppService],

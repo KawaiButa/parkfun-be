@@ -1,9 +1,9 @@
 import { Controller, Get } from "@nestjs/common";
-import { ParkingSerivceService } from "./parkingService.service";
+import { ParkingServiceService } from "./parkingService.service";
 
 @Controller("parking-service")
 export class ParkingServiceController {
-  constructor(private parkingServiceService: ParkingSerivceService) {}
+  constructor(private parkingServiceService: ParkingServiceService) {}
 
   @Get()
   getAll() {

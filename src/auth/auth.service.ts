@@ -46,7 +46,7 @@ export class AuthService {
     if (!isMatch) {
       throw new UnauthorizedException("Invalid email or password");
     }
-    const accessToken = this.jwtService.sign({ id: user.id, role: user.role.name });
+    const accessToken = this.jwtService.sign({ id: user.id, role: user.role.name, partner: user.partner });
     return { accessToken, user };
   }
 

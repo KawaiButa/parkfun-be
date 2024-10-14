@@ -11,7 +11,7 @@ export class ParkingSlotController {
   constructor(private readonly parkingSlotService: ParkingSlotService) {}
 
   @Post()
-  @UseGuards(AuthGuard("jwt"), RolesGuard("admin", "partner"))
+  @UseGuards(RolesGuard("admin", "partner"))
   create(@Body() createParkingSlotDto: CreateParkingSlotDto, @Req() request: Request & { user: User }) {
     const { user } = request;
     if (!user.partner) return this.parkingSlotService.create(createParkingSlotDto);
@@ -19,6 +19,7 @@ export class ParkingSlotController {
   }
 
   @Get()
+  @UseGuards(RolesGuard())
   findAll(@Req() request: Request & { user: User }, @Query() pageQuery: PageOptionsDto) {
     const { user } = request;
     if (!user || !user.partner) return this.parkingSlotService.findAll(pageQuery);
@@ -26,7 +27,7 @@ export class ParkingSlotController {
   }
 
   @Get(":id")
-  @UseGuards(AuthGuard("jwt"), RolesGuard("admin", "partner"))
+  @UseGuards(RolesGuard())
   findOne(@Param("id") id: string) {
     return this.parkingSlotService.findOne(+id);
   }

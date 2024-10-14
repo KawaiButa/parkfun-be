@@ -51,6 +51,9 @@ export class PartnerService {
       order: {
         [orderBy]: order,
       },
+      relations: {
+        type: true,
+      },
     });
     const itemCount = data.length;
     const pageMetaDto = new PageMetaDto({ itemCount, pageOptionsDto });

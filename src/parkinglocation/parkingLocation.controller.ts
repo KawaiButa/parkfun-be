@@ -2,33 +2,33 @@ import { Controller, Get, Post, Body, Patch, Param, Delete, Request, UseGuards, 
 import { ParkingLocationService } from "./parkingLocation.service";
 import { CreateParkingLocationDto } from "./dtos/createParkingLocation.dto";
 import { UpdateParkingLocationDto } from "./dtos/updateParkingLocation.dto";
-import { AuthGuard } from "@nestjs/passport";
 import RolesGuard from "src/role/role.guard";
 import { User } from "src/user/user.entity";
 import { SearchParkingLocationDto } from "./dtos/searchParkingLocation.dto";
 import { PageOptionsDto } from "src/utils/dtos/pageOption.dto";
+import { Partner } from "src/partner/partner.entity";
 
 @Controller("parking-location")
 export class ParkingLocationController {
   constructor(private readonly parkingLocationService: ParkingLocationService) {}
 
   @Post()
-  @UseGuards(AuthGuard("jwt"), RolesGuard("admin", "partner"))
+  @UseGuards(RolesGuard("admin", "partner"))
   create(
     @Body() createParkingLocationDto: CreateParkingLocationDto,
-    @Request() { user }: Request & { user: { id: number; email: string; role: string } }
+    @Request() { user }: Request & { user: { id: number; role: string } }
   ) {
     return this.parkingLocationService.create(user.id, createParkingLocationDto);
   }
   @Get()
-  // @UseGuards(RolesGuard())
+  @UseGuards(RolesGuard())
   findAll(
-    @Req() request: Request & { user: User },
+    @Req() request: Request & { user: { role: string; id: number; partner: Partner } },
     @Query() searchQuery: SearchParkingLocationDto,
     @Query() pageOptions: PageOptionsDto
   ) {
     const { user } = request;
-    if (!user) return this.parkingLocationService.search(searchQuery, pageOptions);
+    if (!user || user.role === "user") return this.parkingLocationService.search(searchQuery, pageOptions);
     if (!user.partner) return this.parkingLocationService.findAll(pageOptions);
     return this.parkingLocationService.findAll(pageOptions, user.partner.id);
   }

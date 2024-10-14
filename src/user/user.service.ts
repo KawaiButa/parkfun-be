@@ -43,7 +43,11 @@ export class UserService {
     queryRunner.connect();
     queryRunner.startTransaction();
     try {
-      const user = this.userRepository.create({ ...createUserDto, image: imageEntity, role: roleEntity });
+      const user = this.userRepository.create({
+        ...createUserDto,
+        image: imageEntity,
+        role: roleEntity,
+      });
       await this.userRepository.save(user);
       return user;
     } catch (err) {

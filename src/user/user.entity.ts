@@ -56,4 +56,7 @@ export class User {
 
   @DeleteDateColumn()
   deleteAt: Date;
+
+  @Column({ nullable: true })
+  stripeCustomerId?: string;
 }

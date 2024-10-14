@@ -2,7 +2,7 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { ParkingService } from "./parkingService.entity";
 
-export class ParkingSerivceService {
+export class ParkingServiceService {
   constructor(@InjectRepository(ParkingService) private parkingSerivceRepository: Repository<ParkingService>) {}
 
   async getAll() {

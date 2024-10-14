@@ -1,3 +1,4 @@
+import { Booking } from "src/booking/booking.entity";
 import { ParkingSlot } from "src/parkingSlot/parkingSlot.entity";
 import { Column, CreateDateColumn, DeleteDateColumn, Entity, ManyToMany, PrimaryGeneratedColumn } from "typeorm";
 
@@ -20,4 +21,7 @@ export class ParkingService {
 
   @DeleteDateColumn()
   deleteAt: Date;
+
+  @ManyToMany(() => Booking, (booking) => booking.services)
+  bookings: Booking[];
 }

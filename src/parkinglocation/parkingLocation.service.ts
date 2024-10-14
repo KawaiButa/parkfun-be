@@ -119,9 +119,16 @@ export class ParkingLocationService {
         return true;
       });
     }
-    const itemCount = data.length;
+    const dataWithPrice: (ParkingLocation & { minPrice: number })[] = data.map((parkingLocation) => {
+      const minPrice = parkingLocation.parkingSlots.reduce(
+        (minPrice, { price: priceB }) => (minPrice < priceB ? minPrice : priceB),
+        1000
+      );
+      return { ...parkingLocation, minPrice };
+    });
+    const itemCount = dataWithPrice.length;
     const pageMetaDto = new PageMetaDto({ itemCount, pageOptionsDto });
-    return new PageDto(data, pageMetaDto);
+    return new PageDto(dataWithPrice, pageMetaDto);
   }
   async create(userId: number, createParkingLocationDto: CreateParkingLocationDto) {
     const { pricingOptionId, paymentMethodId, images } = createParkingLocationDto;
@@ -154,22 +161,34 @@ export class ParkingLocationService {
       images: true,
       parkingSlots: true,
     };
-    if (!partnerId)
-      return this.parkingLocationRepository.find({
+    if (!partnerId) {
+      const data = await this.parkingLocationRepository.find({
         relations,
+        take: pageOptionsDto.take,
+        skip: pageOptionsDto.skip,
       });
-    return await this.parkingLocationRepository.find({
+      const itemCount = data.length;
+      const pageMetaDto = new PageMetaDto({ itemCount, pageOptionsDto });
+      return new PageDto(data, pageMetaDto);
+    }
+    const data = await this.parkingLocationRepository.find({
       where: { partner: { id: partnerId } },
       take: pageOptionsDto.take,
       skip: pageOptionsDto.skip,
       relations,
     });
+    const itemCount = data.length;
+    const pageMetaDto = new PageMetaDto({ itemCount, pageOptionsDto });
+    return new PageDto(data, pageMetaDto);
   }
 
   async findOne(id: number, partnerId?: number) {
     const relations: FindOptionsRelations<ParkingLocation> = {
       partner: true,
       paymentMethod: true,
+      pricingOption: true,
+      images: true,
+      parkingSlots: true,
     };
     const where: FindOptionsWhere<ParkingLocation> = {
       id,
