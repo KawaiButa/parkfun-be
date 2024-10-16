@@ -6,14 +6,20 @@ export class PaymentRecord {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @OneToOne(() => Booking, (booking) => booking.payment, { eager: true })
-  booking: Booking;
-
   @Column()
   amount: number;
 
-  @Column({ default: false })
+  @Column()
+  transactionId: string;
+
+  @OneToOne(() => Booking, (booking) => booking.payment)
+  booking: Booking;
+
+  @Column()
   isRefunded: boolean;
+
+  @Column()
+  receiptUrl: string;
 
   @CreateDateColumn()
   createAt: Date;

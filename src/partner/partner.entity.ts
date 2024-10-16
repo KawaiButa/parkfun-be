@@ -1,4 +1,5 @@
 import { IsNumber, IsOptional, IsString, IsUrl } from "class-validator";
+import { ParkingLocation } from "src/parkinglocation/parkingLocation.entity";
 import { PartnerType } from "src/partnerType/partnerType.entity";
 import { User } from "src/user/user.entity";
 import {
@@ -8,6 +9,7 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
 } from "typeorm";
@@ -38,6 +40,9 @@ export class Partner {
 
   @OneToOne(() => User, (user) => user.partner, { cascade: true, eager: true })
   user: User;
+
+  @OneToMany(() => ParkingLocation, (location) => location.partner, { onDelete: "CASCADE" })
+  parkingLocations: ParkingLocation[];
 
   @CreateDateColumn()
   createAt: Date;

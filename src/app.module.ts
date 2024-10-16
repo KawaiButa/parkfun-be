@@ -15,6 +15,7 @@ import { ParkingServiceModule } from "./parkingService/parkingService.module";
 import { PaymentMethodModule } from "./paymentMethod/paymentMethod.module";
 import { PricingOptionModule } from "./pricingOption/pricingOption.module";
 import { BookingModule } from "./booking/booking.module";
+import { PaymentModule } from "./payment/payment.module";
 import { PaymentRecordModule } from "./paymentRecord/paymentRecord.module";
 @Module({
   imports: [
@@ -46,6 +47,7 @@ import { PaymentRecordModule } from "./paymentRecord/paymentRecord.module";
     PricingOptionModule,
     BookingModule,
     PaymentRecordModule,
+    PaymentModule,
   ],
   controllers: [AppController],
   providers: [AppService],

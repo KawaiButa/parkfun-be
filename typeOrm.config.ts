@@ -4,7 +4,6 @@ import { config } from "dotenv";
 
 config();
 const configService = new ConfigService();
-
 export default new DataSource({
   type: "postgres",
   host: configService.get("DB_HOST"),
@@ -14,4 +13,5 @@ export default new DataSource({
   database: configService.get("DB_NAME"),
   migrations: ["dist/src/migrations/*{.ts,.js}"],
   entities: ["dist/src/**/*.entity.{js,ts}"],
+  ssl: { rejectUnauthorized: false },
 });

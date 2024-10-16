@@ -16,6 +16,7 @@ const option: DataSourceOptions & SeederOptions = {
   entities: ["dist/src/**/*.entity.{js,ts}"],
   seeds: ["dist/src/**/*.seed{.ts,.js}"],
   factories: ["dist/src/factories/*{.ts,.js}"],
+  ssl: { rejectUnauthorized: false },
 };
 
 const dataSource = new DataSource(option);

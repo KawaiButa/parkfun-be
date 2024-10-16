@@ -37,6 +37,7 @@ export class AuthService {
       relations: {
         partner: true,
         role: true,
+        image: true,
       },
     });
     if (!user) {

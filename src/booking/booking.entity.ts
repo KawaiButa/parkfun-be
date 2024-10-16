@@ -40,6 +40,7 @@ export class Booking {
   status: BookingStatus;
 
   @OneToOne(() => PaymentRecord, (payment) => payment.booking)
+  @JoinColumn({ name: "paymentRecordId" })
   payment: PaymentRecord;
 
   @Column()

@@ -1,5 +1,6 @@
 import { Exclude } from "class-transformer";
 import { IsEmail, IsNotEmpty, IsString } from "class-validator";
+import { Booking } from "src/booking/booking.entity";
 import { Image } from "src/image/image.entity";
 import { Partner } from "src/partner/partner.entity";
 import { Role } from "src/role/role.entity";
@@ -10,6 +11,7 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
 } from "typeorm";
@@ -51,11 +53,14 @@ export class User {
   @JoinColumn()
   image: Image;
 
+  @OneToMany(() => Booking, (booking) => booking.user)
+  bookings: Booking[];
+
   @CreateDateColumn()
   createAt: Date;
 
   @DeleteDateColumn()
-  deleteAt: Date;
+  deleteAt?: Date;
 
   @Column({ nullable: true })
   stripeCustomerId?: string;

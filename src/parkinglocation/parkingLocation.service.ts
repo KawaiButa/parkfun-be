@@ -177,9 +177,16 @@ export class ParkingLocationService {
       skip: pageOptionsDto.skip,
       relations,
     });
-    const itemCount = data.length;
+    const dataWithPrice: (ParkingLocation & { minPrice: number })[] = data.map((parkingLocation) => {
+      const minPrice = parkingLocation.parkingSlots.reduce(
+        (minPrice, { price: priceB }) => (minPrice < priceB ? minPrice : priceB),
+        1000
+      );
+      return { ...parkingLocation, minPrice };
+    });
+    const itemCount = dataWithPrice.length;
     const pageMetaDto = new PageMetaDto({ itemCount, pageOptionsDto });
-    return new PageDto(data, pageMetaDto);
+    return new PageDto(dataWithPrice, pageMetaDto);
   }
 
   async findOne(id: number, partnerId?: number) {

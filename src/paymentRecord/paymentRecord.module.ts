@@ -1,15 +1,12 @@
+import { TypeOrmModule } from "@nestjs/typeorm";
+import { PaymentRecord } from "./paymentRecord.entity";
 import { Module } from "@nestjs/common";
-import { ConfigModule } from "@nestjs/config";
-import StripePaymentService from "./stripe.service";
-import { UserModule } from "src/user/user.module";
 import { PaymentRecordController } from "./paymentRecord.controller";
-import { BookingModule } from "src/booking/booking.module";
-import { CacheModule } from "@nestjs/cache-manager";
+import { PaymentRecordService } from "./paymenRecord.service";
 
 @Module({
-  imports: [ConfigModule, UserModule, BookingModule, CacheModule.register()],
-  providers: [StripePaymentService],
+  imports: [TypeOrmModule.forFeature([PaymentRecord])],
   controllers: [PaymentRecordController],
-  exports: [StripePaymentService],
+  providers: [PaymentRecordService],
 })
 export class PaymentRecordModule {}

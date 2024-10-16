@@ -1,6 +1,6 @@
 import { MigrationInterface, QueryRunner, Table, TableForeignKey } from "typeorm";
 
-export class CreateBooking1634567890127 implements MigrationInterface {
+export class CreateBooking1634567890128 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.createTable(
       new Table({
@@ -40,8 +40,9 @@ export class CreateBooking1634567890127 implements MigrationInterface {
             type: "timestamp",
           },
           {
-            name: "sessionId",
-            type: "varchar",
+            name: "paymentRecordId",
+            isNullable: true,
+            type: "int",
           },
           {
             name: "createAt",
@@ -64,6 +65,17 @@ export class CreateBooking1634567890127 implements MigrationInterface {
         referencedColumnNames: ["id"],
         referencedTableName: "user",
         name: "FK_booking_user",
+      })
+    );
+
+    await queryRunner.createForeignKey(
+      "booking",
+      new TableForeignKey({
+        columnNames: ["paymentRecordId"],
+        referencedColumnNames: ["id"],
+        referencedTableName: "payment_record",
+        name: "FK_booking_payment_record",
+        onDelete: "SET NULL",
       })
     );
 

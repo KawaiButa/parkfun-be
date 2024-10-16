@@ -1,4 +1,5 @@
 import { IsNotEmpty } from "class-validator";
+import { Booking } from "src/booking/booking.entity";
 import { Image } from "src/image/image.entity";
 import { ParkingSlot } from "src/parkingSlot/parkingSlot.entity";
 import { Partner } from "src/partner/partner.entity";
@@ -51,6 +52,9 @@ export class ParkingLocation {
   @ManyToOne(() => PricingOption, { cascade: true })
   @JoinColumn()
   pricingOption: PricingOption;
+
+  @OneToMany(() => Booking, (booking) => booking.parkingSlot)
+  bookings: Booking[];
 
   @OneToMany(() => Image, (img) => img.parkingLocation, { cascade: true, onUpdate: "CASCADE" })
   images: Image[];

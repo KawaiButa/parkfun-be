@@ -5,11 +5,16 @@ import { UserService } from "src/user/user.service";
 import Stripe from "stripe";
 import { BookingDto } from "./dtos/booking.dto";
 import { BookingStatus } from "src/booking/booking.entity";
+import { InjectRepository } from "@nestjs/typeorm";
+import { PaymentRecord } from "../paymentRecord/paymentRecord.entity";
+import { Repository } from "typeorm";
 @Injectable()
 export default class StripePaymentService {
   private stripe: Stripe;
 
   constructor(
+    @InjectRepository(PaymentRecord)
+    private paymentRecordRepository: Repository<PaymentRecord>,
     private configService: ConfigService,
     private userService: UserService,
     private bookingService: BookingService
@@ -50,14 +55,24 @@ export default class StripePaymentService {
         ],
         customer: customerId,
         mode: "payment",
-        return_url: `${this.configService.get("FRONTEND_URL")}/home/map`,
+        return_url: `${this.configService.get("FRONTEND_URL")}/home/payment/${booking.id}`,
       }),
       booking,
     };
   }
-  async complete(bookingId: number) {
+  async complete(bookingId: number, event: Stripe.ChargeSucceededEvent) {
+    const bookingEntity = await this.bookingService.getOne(bookingId);
+    const paymentRecord = this.paymentRecordRepository.create({
+      booking: bookingEntity,
+      amount: bookingEntity.amount,
+      isRefunded: event.data.object.refunded,
+      receiptUrl: event.data.object.receipt_url,
+      transactionId: event.data.object.id,
+    });
+    await this.paymentRecordRepository.save(paymentRecord);
     const booking = await this.bookingService.update(bookingId, {
       status: BookingStatus.COMPLETED,
+      payment: paymentRecord,
     });
     return booking;
   }

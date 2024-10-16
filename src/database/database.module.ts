@@ -15,7 +15,7 @@ import { ConfigModule, ConfigService } from "@nestjs/config";
         password: configService.get("DB_PASSWORD"),
         database: configService.get("DB_NAME"),
         entities: [__dirname + "/../**/*.entity.{js,ts}"],
-        ssl: configService.get("IS_PRODUCTION"),
+        ssl: { rejectUnauthorized: false },
       }),
     }),
   ],
