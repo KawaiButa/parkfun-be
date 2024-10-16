@@ -6,5 +6,6 @@ export default setSeederFactory(Partner, (faker) => {
   partner.avatarUrl = faker.image.avatar();
   partner.location = faker.location.streetAddress() + ", " + faker.location.city() + ", " + faker.location.country();
   partner.description = faker.commerce.productDescription();
+  partner.createAt = faker.date.past();
   return partner;
 });

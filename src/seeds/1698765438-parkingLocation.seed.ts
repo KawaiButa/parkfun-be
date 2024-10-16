@@ -22,7 +22,7 @@ export default class ParkingLocation1698765438 implements Seeder {
       partners.flatMap((partner) => {
         const paymentMethod = paymentMethods[Math.floor(Math.random() * paymentMethods.length)];
         const pricingOption = pricingOptions[Math.floor(Math.random() * pricingOptions.length)];
-        return parkingLocationFactory.saveMany(10, {
+        return parkingLocationFactory.saveMany(50, {
           partner,
           paymentMethod,
           pricingOption,

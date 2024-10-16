@@ -41,7 +41,7 @@ export class Booking {
 
   @OneToOne(() => PaymentRecord, (payment) => payment.booking)
   @JoinColumn({ name: "paymentRecordId" })
-  payment: PaymentRecord;
+  payment?: PaymentRecord;
 
   @Column()
   amount: number;

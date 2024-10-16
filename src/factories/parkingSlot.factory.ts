@@ -11,5 +11,6 @@ export default setSeederFactory(ParkingSlot, (faker) => {
   parkingSlot.endAt = faker.number.int({ min: 0, max: 86400 });
   parkingSlot.price = faker.number.float({ min: 5, max: 100 });
   parkingSlot.isAvailable = true;
+  parkingSlot.createAt = faker.date.past();
   return parkingSlot;
 });

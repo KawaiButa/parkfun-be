@@ -10,5 +10,6 @@ export default setSeederFactory(ParkingLocation, (faker) => {
   parkingLocation.lat = faker.location.latitude();
   parkingLocation.lng = faker.location.longitude();
   parkingLocation.description = faker.commerce.productDescription();
+  parkingLocation.createAt = faker.date.past();
   return parkingLocation;
 });

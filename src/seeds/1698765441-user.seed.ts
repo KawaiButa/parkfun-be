@@ -40,7 +40,7 @@ export default class UserSeeder1698765441 implements Seeder {
         });
       })
     );
-    const user = await userFactory.saveMany(20, {
+    const user = await userFactory.saveMany(50, {
       role: userRole,
     });
     return partnerUsers.concat(user);

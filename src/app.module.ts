@@ -17,6 +17,7 @@ import { PricingOptionModule } from "./pricingOption/pricingOption.module";
 import { BookingModule } from "./booking/booking.module";
 import { PaymentModule } from "./payment/payment.module";
 import { PaymentRecordModule } from "./paymentRecord/paymentRecord.module";
+import { StatisticModule } from "./statistics/statistics.module";
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -48,6 +49,7 @@ import { PaymentRecordModule } from "./paymentRecord/paymentRecord.module";
     BookingModule,
     PaymentRecordModule,
     PaymentModule,
+    StatisticModule,
   ],
   controllers: [AppController],
   providers: [AppService],
