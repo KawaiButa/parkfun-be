@@ -36,6 +36,10 @@ export class CreateBooking1634567890128 implements MigrationInterface {
             type: "timestamp",
           },
           {
+            name: "fee",
+            type: "decimal",
+          },
+          {
             name: "endAt",
             type: "timestamp",
           },

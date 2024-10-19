@@ -1,15 +1,34 @@
 import { ParkingLocation } from "src/parkinglocation/parkingLocation.entity";
 import { setSeederFactory } from "typeorm-extension";
+import { Faker } from "@faker-js/faker";
+
+const generateVietnameseAddress = (faker: Faker): string => {
+  const streetTypes = ["Đường", "Phố", "Ngõ", "Hẻm"];
+  const districtTypes = ["Quận", "Huyện", "Thị xã"];
+  const cityNames = ["Hà Nội", "Hồ Chí Minh", "Đà Nẵng", "Hải Phòng", "Cần Thơ", "Biên Hòa", "Nha Trang", "Huế"];
+
+  const streetNumber = faker.number.int({ min: 1, max: 200 });
+  const streetName = faker.person.lastName();
+  const streetType = faker.helpers.arrayElement(streetTypes);
+  const ward = faker.number.int({ min: 1, max: 20 });
+  const districtType = faker.helpers.arrayElement(districtTypes);
+  const district = faker.number.int({ min: 1, max: 12 });
+  const city = faker.helpers.arrayElement(cityNames);
+
+  return `${streetNumber} ${streetType} ${streetName}, Phường ${ward}, ${districtType} ${district}, ${city}`;
+};
 
 export default setSeederFactory(ParkingLocation, (faker) => {
   const parkingLocation = new ParkingLocation();
-  parkingLocation.address =
-    faker.location.streetAddress() + ", " + faker.location.city() + ", " + faker.location.country();
-  parkingLocation.access = faker.lorem.paragraph();
+  parkingLocation.lat = faker.location.latitude({ min: 8.56, max: 23.39 });
+  parkingLocation.lng = faker.location.longitude({ min: 102.14, max: 109.46 });
+
+  parkingLocation.address = generateVietnameseAddress(faker);
+
+  parkingLocation.access = faker.commerce.productDescription();
   parkingLocation.name = faker.company.name();
-  parkingLocation.lat = faker.location.latitude();
-  parkingLocation.lng = faker.location.longitude();
   parkingLocation.description = faker.commerce.productDescription();
   parkingLocation.createAt = faker.date.past();
+
   return parkingLocation;
 });

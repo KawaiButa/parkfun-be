@@ -1,4 +1,5 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { ParkingLocation } from "src/parkinglocation/parkingLocation.entity";
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity()
 export class PricingOption {
@@ -13,4 +14,7 @@ export class PricingOption {
 
   @Column({ nullable: true })
   description: string;
+
+  @OneToMany(() => ParkingLocation, (parkingLocation) => parkingLocation.pricingOption)
+  parkingLocations: ParkingLocation[];
 }

@@ -17,7 +17,7 @@ export default class ImageSeeder1698765439 implements Seeder {
         })
       )
     ).flat();
-    const images = await imageFactory.saveMany(200);
+    const images = await imageFactory.saveMany(2000);
     return parkingLocationImages.concat(images);
   }
 }

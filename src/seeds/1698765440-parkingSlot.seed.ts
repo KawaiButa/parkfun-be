@@ -17,28 +17,35 @@ export default class ParkingSlot1698765440 implements Seeder {
     const imageRepository = dataSource.getRepository(Image);
 
     const parkingSlotFactory = factoryManager.get(ParkingSlot);
-    const [parkingLocations, parkingSlotTypes, parkingServices, images] = await Promise.all([
-      parkingLocationRepository.find(),
+    const [parkingSlotTypes, parkingServices, images] = await Promise.all([
       parkingSlotTypeRepository.find(),
       parkingServiceRepository.find(),
       imageRepository.find(),
     ]);
-    const parkingSlots = await Promise.all(
-      parkingLocations.flatMap((parkingLocation) => {
-        const services = take(
-          shuffle(parkingServices),
-          Math.floor(Math.random() * parkingServices.length)
-        ) as ParkingService[];
-        const image = take(shuffle(images), 4);
-        return parkingSlotFactory.saveMany(10, {
-          parkingLocation: parkingLocation,
-          type: parkingSlotTypes[0],
-          isAvailable: true,
-          services: services,
-          images: image,
-        });
-      })
-    );
-    return parkingSlots;
+    let i = 0;
+    while (true) {
+      const parkingLocations = await parkingLocationRepository.find({ skip: i, take: 1000 });
+      await Promise.all(
+        parkingLocations.flatMap((parkingLocation) => {
+          Array.from(Array(Math.floor(Math.random() * 5))).map(() => {
+            const services = take(
+              shuffle(parkingServices),
+              Math.floor(Math.random() * parkingServices.length)
+            ) as ParkingService[];
+            const image = take(shuffle(images), 4);
+            return parkingSlotFactory.saveMany(5 + Math.round(Math.random() * 5), {
+              parkingLocation: parkingLocation,
+              type: parkingSlotTypes[0],
+              isAvailable: true,
+              services: services,
+              images: image,
+            });
+          });
+        })
+      );
+      if (parkingLocations.length == 0) break;
+      else i += parkingLocations.length;
+    }
+    return true;
   }
 }

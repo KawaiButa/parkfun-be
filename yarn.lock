@@ -350,6 +350,11 @@
   resolved "https://registry.npmjs.org/@eslint-community/regexpp/-/regexpp-4.11.1.tgz"
   integrity sha512-m4DVN9ZqskZoLU5GlWZadwDnYo3vAEydiUayB9widCl9ffWx2IvPnp6n3on5rJmziJSw9Bv+Z3ChDVdMwXCY8Q==
 
+"@eslint/compat@^1.2.0":
+  version "1.2.1"
+  resolved "https://registry.yarnpkg.com/@eslint/compat/-/compat-1.2.1.tgz#b1263422cd2009a1c8a7d2e0d4b022464d2f4fb1"
+  integrity sha512-JbHG2TWuCeNzh87fXo+/46Z1LEo9DBA9T188d0fZgGxAD+cNyS6sx9fdiyxjGPBMyQVRlCutTByZ6a5+YMkF7g==
+
 "@eslint/eslintrc@^2.1.4":
   version "2.1.4"
   resolved "https://registry.npmjs.org/@eslint/eslintrc/-/eslintrc-2.1.4.tgz"
@@ -838,6 +843,14 @@
     multer "1.4.4-lts.1"
     tslib "2.7.0"
 
+"@nestjs/schedule@^4.1.1":
+  version "4.1.1"
+  resolved "https://registry.yarnpkg.com/@nestjs/schedule/-/schedule-4.1.1.tgz#a730cff250ad5db78fe6a1bfc7f12a30856e48df"
+  integrity sha512-VxAnCiU4HP0wWw8IdWAVfsGC/FGjyToNjjUtXDEQL6oj+w/N5QDd2VT9k6d7Jbr8PlZuBZNdWtDKSkH5bZ+RXQ==
+  dependencies:
+    cron "3.1.7"
+    uuid "10.0.0"
+
 "@nestjs/schematics@^10.0.0", "@nestjs/schematics@^10.0.1":
   version "10.1.4"
   resolved "https://registry.npmjs.org/@nestjs/schematics/-/schematics-10.1.4.tgz"
@@ -1000,11 +1013,6 @@
     "@types/connect" "*"
     "@types/node" "*"
 
-"@types/cache-manager@^4.0.6":
-  version "4.0.6"
-  resolved "https://registry.yarnpkg.com/@types/cache-manager/-/cache-manager-4.0.6.tgz#3ae154034ac9fd9f9aaffd65e14d95e0a83627c2"
-  integrity sha512-8qL93MF05/xrzFm/LSPtzNEOE1eQF3VwGHAcQEylgp5hDSTe41jtFwbSYAPfyYcVa28y1vYSjIt0c1fLLUiC/Q==
-
 "@types/connect@*":
   version "3.4.38"
   resolved "https://registry.npmjs.org/@types/connect/-/connect-3.4.38.tgz"
@@ -1102,6 +1110,11 @@
   version "4.17.10"
   resolved "https://registry.npmjs.org/@types/lodash/-/lodash-4.17.10.tgz"
   integrity sha512-YpS0zzoduEhuOWjAotS6A5AVCva7X4lVlYLF0FYHAY9sdraBfnatttHItlWeZdGhuEkf+OzMNg2ZYAx8t+52uQ==
+
+"@types/luxon@~3.4.0":
+  version "3.4.2"
+  resolved "https://registry.yarnpkg.com/@types/luxon/-/luxon-3.4.2.tgz#e4fc7214a420173cea47739c33cdf10874694db7"
+  integrity sha512-TifLZlFudklWlMBfhubvgqTXRzLDI5pCbGa4P8a3wPyUQSW+1xQ5eDsreP9DWHX3tjq1ke96uYG/nwundroWcA==
 
 "@types/methods@^1.1.4":
   version "1.1.4"
@@ -1918,7 +1931,7 @@ bytes@3.1.2:
   resolved "https://registry.npmjs.org/bytes/-/bytes-3.1.2.tgz"
   integrity sha512-/Nf7TyzTx6S3yRJObOAV7956r8cr2+Oj8AC5dt8wSP3BQAoeX58NoHyCU8P8zGkNXStjTSi6fzO6F0pBdcYbEg==
 
-cache-manager@^4.0.0:
+cache-manager@^4.1.0:
   version "4.1.0"
   resolved "https://registry.yarnpkg.com/cache-manager/-/cache-manager-4.1.0.tgz#aa986421f1c975a862d6de88edb9ab1d30f4bd39"
   integrity sha512-ZGM6dLxrP65bfOZmcviWMadUOCICqpLs92+P/S5tj8onz+k+tB7Gr+SAgOUHCQtfm2gYEQDHiKeul4+tYPOJ8A==
@@ -2304,6 +2317,14 @@ create-require@^1.1.0:
   version "1.1.1"
   resolved "https://registry.npmjs.org/create-require/-/create-require-1.1.1.tgz"
   integrity sha512-dcKFX3jn0MpIaXjisoRvexIJVEKzaq7z2rZKxf+MSr9TkdmHmsU4m2lcLojrj/FHl8mk5VxMmYA+ftRkP/3oKQ==
+
+cron@3.1.7:
+  version "3.1.7"
+  resolved "https://registry.yarnpkg.com/cron/-/cron-3.1.7.tgz#3423d618ba625e78458fff8cb67001672d49ba0d"
+  integrity sha512-tlBg7ARsAMQLzgwqVxy8AZl/qlTc5nibqYwtNGoCrd+cV+ugI+tvZC1oT/8dFH8W455YrywGykx/KMmAqOr7Jw==
+  dependencies:
+    "@types/luxon" "~3.4.0"
+    luxon "~3.4.0"
 
 cross-spawn@^7.0.0, cross-spawn@^7.0.2, cross-spawn@^7.0.3:
   version "7.0.3"
@@ -4673,6 +4694,11 @@ lru-cache@^7.10.1:
   resolved "https://registry.yarnpkg.com/lru-cache/-/lru-cache-7.18.3.tgz#f793896e0fd0e954a59dfdd82f0773808df6aa89"
   integrity sha512-jumlc0BIUrS3qJGgIkWZsyfAM7NCWiBcCDhnd+3NNM5KbBmLTgHVfWBcg6W+rLUsIpzpERPsvwUP7CckAQSOoA==
 
+luxon@~3.4.0:
+  version "3.4.4"
+  resolved "https://registry.yarnpkg.com/luxon/-/luxon-3.4.4.tgz#cf20dc27dc532ba41a169c43fdcc0063601577af"
+  integrity sha512-zobTr7akeGHnv7eBOXcRgMeCP6+uyYsczwmeRCauvpvaAltgNyTbLH/+VaEAPUeWBT+1GuNmz4wC/6jtQzbbVA==
+
 magic-string@0.30.8:
   version "0.30.8"
   resolved "https://registry.npmjs.org/magic-string/-/magic-string-0.30.8.tgz"
@@ -6501,6 +6527,11 @@ utils-merge@1.0.1, utils-merge@1.x.x, utils-merge@^1.0.1:
   version "1.0.1"
   resolved "https://registry.npmjs.org/utils-merge/-/utils-merge-1.0.1.tgz"
   integrity sha512-pMZTvIkT1d+TFGvDOqodOclx0QWkkgi6Tdoa8gC8ffGAAqz9pzPTZWAybbsHHoED/ztMtkv/VoYTYyShUn81hA==
+
+uuid@10.0.0:
+  version "10.0.0"
+  resolved "https://registry.yarnpkg.com/uuid/-/uuid-10.0.0.tgz#5a95aa454e6e002725c79055fd42aaba30ca6294"
+  integrity sha512-8XkAphELsDnEGrDxUOHB3RGvXz6TeuYSGEZBOjtTtPm2lwhGBjLgOzLHB63IUWfBpNucQjND6d3AOudO+H3RWQ==
 
 uuid@9.0.1, uuid@^9.0.0, uuid@^9.0.1:
   version "9.0.1"

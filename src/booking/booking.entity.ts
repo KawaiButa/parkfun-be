@@ -47,6 +47,9 @@ export class Booking {
   amount: number;
 
   @Column()
+  fee: number;
+
+  @Column()
   startAt: Date;
 
   @Column()

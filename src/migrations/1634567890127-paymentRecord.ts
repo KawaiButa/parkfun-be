@@ -47,6 +47,6 @@ export class CreatePaymentRecord1634567890127 implements MigrationInterface {
 
   public async down(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.dropForeignKey("payment_record", "FK_booking_payment");
-    await queryRunner.dropTable("payment_record");
+    await queryRunner.dropTable("p");
   }
 }

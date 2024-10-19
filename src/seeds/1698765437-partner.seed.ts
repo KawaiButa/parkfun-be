@@ -11,7 +11,7 @@ export default class PartnerSeeder1698765437 implements Seeder {
     if (!partnerTypes.length) return;
     const partners = await Promise.all(
       partnerTypes.flatMap((partnerType) => {
-        return partnerFactory.saveMany(10, { type: partnerType });
+        return partnerFactory.saveMany(500, { type: partnerType });
       })
     );
     return partners;

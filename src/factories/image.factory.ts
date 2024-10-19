@@ -3,6 +3,8 @@ import { setSeederFactory } from "typeorm-extension";
 
 export default setSeederFactory(Image, (faker) => {
   const image = new Image();
-  image.url = faker.image.url();
+  image.url = faker.image.urlLoremFlickr({
+    category: "city",
+  });
   return image;
 });

@@ -11,24 +11,24 @@ export default class ParkingLocation1698765438 implements Seeder {
     const paymentMethodRepository = dataSource.getRepository(PaymentMethod);
     const pricingOptionRepository = dataSource.getRepository(PricingOption);
 
-    const [paymentMethods, pricingOptions, partners] = await Promise.all([
+    const [paymentMethods, pricingOptions] = await Promise.all([
       paymentMethodRepository.find(),
       pricingOptionRepository.find(),
-      partnerRepository.find(),
     ]);
+    const partners = await partnerRepository.find();
     const parkingLocationFactory = factoryManager.get(ParkingLocation);
 
-    const parkingLocations = await Promise.all(
+    await Promise.all(
       partners.flatMap((partner) => {
         const paymentMethod = paymentMethods[Math.floor(Math.random() * paymentMethods.length)];
         const pricingOption = pricingOptions[Math.floor(Math.random() * pricingOptions.length)];
-        return parkingLocationFactory.saveMany(50, {
+        return parkingLocationFactory.saveMany(Math.round(Math.random() * 5), {
           partner,
           paymentMethod,
           pricingOption,
         });
       })
     );
-    return parkingLocations;
+    return true;
   }
 }
