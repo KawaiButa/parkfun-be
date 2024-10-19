@@ -15,4 +15,8 @@ export class ImageService {
   async get(id: number): Promise<Image> {
     return await this.imageRepository.findOne({ where: { id } });
   }
+
+  update(id: number, data: Pick<Image, "url">) {
+    return this.imageRepository.update(id, data);
+  }
 }

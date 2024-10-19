@@ -7,9 +7,17 @@ import { BookingModule } from "src/booking/booking.module";
 import { CacheModule } from "@nestjs/cache-manager";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { PaymentRecord } from "src/paymentRecord/paymentRecord.entity";
+import { ParkingSlotModule } from "src/parkingSlot/parkingSlot.module";
 
 @Module({
-  imports: [ConfigModule, UserModule, BookingModule, CacheModule.register(), TypeOrmModule.forFeature([PaymentRecord])],
+  imports: [
+    ConfigModule,
+    UserModule,
+    BookingModule,
+    ParkingSlotModule,
+    CacheModule.register(),
+    TypeOrmModule.forFeature([PaymentRecord]),
+  ],
   providers: [StripePaymentService],
   controllers: [PaymentController],
   exports: [StripePaymentService],

@@ -1,10 +1,13 @@
 import {
   BadRequestException,
   Body,
+  ConflictException,
   Controller,
+  Get,
   Headers,
   Inject,
   NotFoundException,
+  Param,
   Post,
   Req,
   UnauthorizedException,
@@ -18,10 +21,19 @@ import StripePaymentService from "./stripe.service";
 import Stripe from "stripe";
 import { CACHE_MANAGER } from "@nestjs/cache-manager";
 import { Cache } from "cache-manager";
+import { UserService } from "src/user/user.service";
+import { SchedulerRegistry } from "@nestjs/schedule";
+import { BookingService } from "src/booking/booking.service";
+import { ParkingSlotService } from "src/parkingSlot/parkingSlot.service";
+import { BookingStatus } from "src/booking/booking.entity";
 @Controller("/payment")
 export class PaymentController {
   constructor(
     private paymentRecordService: StripePaymentService,
+    private bookingService: BookingService,
+    private parkingSlotService: ParkingSlotService,
+    private userService: UserService,
+    private scheduleRegistry: SchedulerRegistry,
     @Inject(CACHE_MANAGER) private cacheManager: Cache
   ) {}
   @Post()
@@ -31,10 +43,14 @@ export class PaymentController {
     if (!user) {
       throw new UnauthorizedException("You are not logged in");
     }
-    const { session, booking } = await this.paymentRecordService.charge(bookingDto, user.id);
-    await this.cacheManager.set(session.customer as string, booking.id, {
-      ttl: 60 * 60 * 24, // 1 day
-    });
+    const [booking] = await Promise.all([
+      this.bookingService.create(bookingDto, user.id),
+      this.parkingSlotService.update(bookingDto.parkingSlotId, {
+        isAvailable: false,
+      }),
+    ]);
+    const { session } = await this.paymentRecordService.charge(booking);
+    this.cacheManager.set(session.customer, booking.id, { ttl: 5 * 60 } as any);
     return { clientSecret: session.client_secret };
   }
 
@@ -49,8 +65,26 @@ export class PaymentController {
       if (!bookingId) {
         throw new NotFoundException("Invalid session ID");
       }
-      return await this.paymentRecordService.complete(bookingId, event);
+      this.cacheManager.del(event.data.object.customer as string);
+      return this.paymentRecordService.complete(bookingId, event);
     }
     return event;
+  }
+
+  @Get("resume/:bookingId")
+  @UseGuards(AuthGuard("jwt"), RolesGuard("user", "admin"))
+  async getResume(
+    @Param("bookingId") bookingId: number,
+    @Req() request: Request & { user: { id: number; role: string } }
+  ) {
+    const { user } = request;
+    if (!user) {
+      throw new UnauthorizedException("You are not logged in");
+    }
+
+    const booking = await this.bookingService.getOne(bookingId);
+    if (booking.status !== BookingStatus.PENDING) throw new ConflictException("The booking is not pending");
+    if (booking.user.id !== user.id) throw new ConflictException("You do not have permission to continue this booking");
+    return this.paymentRecordService.charge(booking);
   }
 }

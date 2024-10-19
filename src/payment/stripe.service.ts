@@ -1,13 +1,15 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { ConflictException, Injectable, NotFoundException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { BookingService } from "src/booking/booking.service";
 import { UserService } from "src/user/user.service";
 import Stripe from "stripe";
-import { BookingDto } from "./dtos/booking.dto";
-import { BookingStatus } from "src/booking/booking.entity";
+import { Booking, BookingStatus } from "src/booking/booking.entity";
 import { InjectRepository } from "@nestjs/typeorm";
 import { PaymentRecord } from "../paymentRecord/paymentRecord.entity";
 import { Repository } from "typeorm";
+import { SchedulerRegistry } from "@nestjs/schedule";
+import * as dayjs from "dayjs";
+import { ParkingSlotService } from "src/parkingSlot/parkingSlot.service";
 @Injectable()
 export default class StripePaymentService {
   private stripe: Stripe;
@@ -17,7 +19,9 @@ export default class StripePaymentService {
     private paymentRecordRepository: Repository<PaymentRecord>,
     private configService: ConfigService,
     private userService: UserService,
-    private bookingService: BookingService
+    private bookingService: BookingService,
+    private parkingSlotService: ParkingSlotService,
+    private scheduleRegistry: SchedulerRegistry
   ) {
     this.stripe = new Stripe(configService.get("STRIPE_SECRET_KEY"));
   }
@@ -27,8 +31,23 @@ export default class StripePaymentService {
       email,
     });
   }
-  async charge(bookingDto: BookingDto, userId: number) {
-    const booking = await this.bookingService.create(bookingDto, userId);
+  async charge(booking: Booking) {
+    try {
+      this.scheduleRegistry.getTimeout("" + booking.parkingSlot.id + "_pending");
+      throw new ConflictException("Someone else has been booking this slot within your selected time.");
+    } catch (e) {
+      if (!e) return;
+      this.scheduleRegistry.addTimeout(
+        "" + booking.parkingSlot.id + "_pending",
+        setTimeout(
+          () => {
+            this.bookingService.update(booking.id, { status: BookingStatus.CANCELLED });
+            this.parkingSlotService.update(booking.parkingSlot.id, { isAvailable: true });
+          },
+          this.getMillisecondsBetweenDates(new Date(), dayjs().add(15, "minutes"))
+        )
+      );
+    }
     const { user } = booking;
     if (!user) throw new NotFoundException("You are not logged in");
     let customerId = user.stripeCustomerId;
@@ -37,7 +56,6 @@ export default class StripePaymentService {
       await this.userService.update(user.id, { stripeCustomerId: customer.id });
       customerId = customer.id;
     }
-
     return {
       session: await this.stripe.checkout.sessions.create({
         ui_mode: "embedded",
@@ -48,7 +66,7 @@ export default class StripePaymentService {
               product_data: {
                 name: "parkfun-booking",
               },
-              unit_amount: booking.amount * 100,
+              unit_amount: Math.round(booking.amount * 100),
             },
             quantity: 1,
           },
@@ -60,20 +78,50 @@ export default class StripePaymentService {
       booking,
     };
   }
+
   async complete(bookingId: number, event: Stripe.ChargeSucceededEvent) {
-    const bookingEntity = await this.bookingService.getOne(bookingId);
+    const booking = await this.bookingService.getOne(bookingId);
+    const parkingSlot = booking.parkingSlot;
     const paymentRecord = this.paymentRecordRepository.create({
-      booking: bookingEntity,
-      amount: bookingEntity.amount,
+      booking: booking,
+      amount: booking.amount,
       isRefunded: event.data.object.refunded,
       receiptUrl: event.data.object.receipt_url,
       transactionId: event.data.object.id,
     });
     await this.paymentRecordRepository.save(paymentRecord);
-    const booking = await this.bookingService.update(bookingId, {
+    await this.bookingService.update(bookingId, {
       status: BookingStatus.COMPLETED,
       payment: paymentRecord,
     });
+    this.scheduleRegistry.deleteTimeout(`${parkingSlot.id}_pending`);
+    this.scheduleRegistry.addTimeout(
+      `${booking.id}_start`,
+      setTimeout(
+        () => {
+          this.parkingSlotService.update(booking.parkingSlot.id, {
+            isAvailable: false,
+          });
+        },
+        this.getMillisecondsBetweenDates(new Date(), booking.startAt)
+      )
+    );
+    this.scheduleRegistry.addTimeout(
+      `${booking.id}_end`,
+      setTimeout(
+        () => {
+          this.parkingSlotService.update(booking.parkingSlot.id, {
+            isAvailable: true,
+          });
+        },
+        this.getMillisecondsBetweenDates(new Date(), booking.endAt)
+      )
+    );
     return booking;
+  }
+  getMillisecondsBetweenDates(date1, date2) {
+    const d1 = dayjs(date1);
+    const d2 = dayjs(date2);
+    return Math.abs(d2.diff(d1));
   }
 }

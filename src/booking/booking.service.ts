@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import { Repository } from "typeorm";
 import { Booking, BookingStatus } from "./booking.entity";
 import { CreateBookingDto } from "./dtos/createBooking.dto";
@@ -6,7 +6,6 @@ import { UserService } from "src/user/user.service";
 import { ParkingSlotService } from "src/parkingSlot/parkingSlot.service";
 import { ParkingServiceService } from "src/parkingService/parkingService.service";
 import { InjectRepository } from "@nestjs/typeorm";
-import { addSecondsToToday } from "src/utils/utils";
 import { PageOptionsDto } from "src/utils/dtos/pageOption.dto";
 import { PageMetaDto } from "src/utils/dtos/pageMeta.dto";
 import { PageDto } from "src/utils/dtos/page.dto";
@@ -30,21 +29,23 @@ export class BookingService {
     pageOptionsDto: PageOptionsDto
   ): Promise<PageDto<Booking>> {
     const user = await this.userService.getOne(id);
-    let queryBuilder = this.bookingRepository.createQueryBuilder("booking");
-    queryBuilder = queryBuilder
+    const queryBuilder = this.bookingRepository.createQueryBuilder("booking");
+    queryBuilder
       .innerJoinAndSelect(ParkingSlot, "parkingSlot", "booking.parkingSlotId = parkingSlot.id ")
       .innerJoinAndSelect(ParkingLocation, "parkingLocation", "parkingSlot.parkingLocationId = parkingLocation.id");
-    if (user.role.name === "partner") {
-      queryBuilder = queryBuilder.where("parkingLocation.partnerId = :partnerId", { partnerId: user.partner.id });
-    }
-    if (user.role.name === "user") queryBuilder = queryBuilder.where("booking.userId = :userId", { userId: user.id });
+    if (user.role.name === "partner")
+      queryBuilder.where("parkingLocation.partnerId = :partnerId", { partnerId: user.partner.id });
+
+    if (user.role.name === "user") queryBuilder.where("booking.userId = :userId", { userId: user.id });
     const { status, fromAt, priceStartAt, priceEndAt } = searchBookingDto;
-    if (status) queryBuilder = queryBuilder.andWhere("booking.status = :status", { status });
-    if (fromAt) queryBuilder = queryBuilder.andWhere("booking.startAt >= :fromAt", { fromAt });
-    if (priceStartAt) queryBuilder = queryBuilder.andWhere("booking.amount >= :priceStartAt", { priceStartAt });
-    if (priceEndAt) queryBuilder = queryBuilder.andWhere("booking.amount <= :priceEndAt", { priceEndAt });
+    if (status) queryBuilder.andWhere("booking.status = :status", { status });
+    if (fromAt) queryBuilder.andWhere("booking.startAt >= :fromAt", { fromAt });
+    if (priceStartAt) queryBuilder.andWhere("booking.amount >= :priceStartAt", { priceStartAt });
+    if (priceEndAt) queryBuilder.andWhere("booking.amount <= :priceEndAt", { priceEndAt });
     const { take, skip } = pageOptionsDto;
-    queryBuilder = queryBuilder.skip(skip).take(take);
+    queryBuilder.orderBy("booking.createAt", "DESC");
+    queryBuilder.skip(skip).take(take);
+
     const [data, itemCount] = await queryBuilder.getManyAndCount();
     const metaDto = new PageMetaDto({ pageOptionsDto, itemCount });
     return new PageDto(data, metaDto);
@@ -63,6 +64,7 @@ export class BookingService {
   }
   async create(createBookingDto: CreateBookingDto, userId: number) {
     const { parkingSlotId, serviceIds, startAt, endAt } = createBookingDto;
+    if (startAt < endAt) throw new BadRequestException("The startAt must be before endAt");
     const [user, parkingSlot, services] = await Promise.all([
       this.userService.getOne(userId),
       this.parkingSlotService.findOne(parkingSlotId),
@@ -75,8 +77,8 @@ export class BookingService {
       user,
       parkingSlot,
       services,
-      startAt: addSecondsToToday(startAt),
-      endAt: addSecondsToToday(endAt),
+      startAt,
+      endAt,
       status: BookingStatus.PENDING,
     });
     return await this.bookingRepository.save(booking);
@@ -86,5 +88,8 @@ export class BookingService {
     if (!booking) throw new NotFoundException("Cannot find the booking");
     await this.bookingRepository.update(bookingId, data);
     return await this.bookingRepository.findOne({ where: { id: bookingId } });
+  }
+  findOneBy(param: Partial<Booking>) {
+    return this.bookingRepository.findOne({ where: param });
   }
 }

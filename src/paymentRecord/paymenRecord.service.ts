@@ -7,8 +7,8 @@ import { Repository } from "typeorm";
 export class PaymentRecordService {
   constructor(@InjectRepository(PaymentRecord) private paymentRecordRepository: Repository<PaymentRecord>) {}
 
-  async getOne(id: number) {
-    return await this.paymentRecordRepository.findOne({
+  getOne(id: number) {
+    return this.paymentRecordRepository.findOne({
       where: { booking: { id } },
       relations: {
         booking: {
@@ -17,6 +17,9 @@ export class PaymentRecordService {
           services: true,
           payment: true,
         },
+      },
+      order: {
+        createAt: "DESC",
       },
     });
   }

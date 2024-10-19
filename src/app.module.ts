@@ -18,6 +18,7 @@ import { BookingModule } from "./booking/booking.module";
 import { PaymentModule } from "./payment/payment.module";
 import { PaymentRecordModule } from "./paymentRecord/paymentRecord.module";
 import { StatisticModule } from "./statistics/statistics.module";
+import { ScheduleModule } from "@nestjs/schedule";
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -35,6 +36,7 @@ import { StatisticModule } from "./statistics/statistics.module";
         STRIPE_WEBHOOK_SECRET: Joi.string(),
       }),
     }),
+    ScheduleModule.forRoot(),
     DatabaseModule,
     UserModule,
     AuthModule,

@@ -1,17 +1,17 @@
-import { IsArray, IsNotEmpty, IsNumber, IsOptional } from "class-validator";
+import { IsArray, IsDate, IsNotEmpty, IsNumber, IsOptional } from "class-validator";
 
 export class CreateBookingDto {
   @IsNumber()
   @IsNotEmpty()
   parkingSlotId: number;
 
-  @IsNumber()
+  @IsDate()
   @IsNotEmpty()
-  startAt: number;
+  startAt: Date;
 
-  @IsNumber()
+  @IsDate()
   @IsNotEmpty()
-  endAt: number;
+  endAt: Date;
 
   @IsOptional()
   @IsArray()
