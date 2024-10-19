@@ -1,20 +1,29 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Brackets, DataSource, FindOptionsRelations, FindOptionsWhere, QueryFailedError, Repository } from "typeorm";
+import {
+  Brackets,
+  DataSource,
+  FindOptionsRelations,
+  FindOptionsWhere,
+  Like,
+  QueryFailedError,
+  Repository,
+} from "typeorm";
 import { PricingOptionService } from "src/pricingOption/pricingOption.service";
 import { PaymentMethodService } from "src/paymentMethod/paymentMethod.service";
 import { Partner } from "src/partner/partner.entity";
 import { User } from "src/user/user.entity";
-import { omitBy, isUndefined } from "lodash";
+import { omitBy, isUndefined, set, map, omit, groupBy } from "lodash";
 import { CreateParkingLocationDto } from "./dtos/createParkingLocation.dto";
 import { SearchParkingLocationDto } from "./dtos/searchParkingLocation.dto";
 import { UpdateParkingLocationDto } from "./dtos/updateParkingLocation.dto";
 import { ParkingLocation } from "./parkingLocation.entity";
-import { ParkingSlot } from "src/parkingSlot/parkingSlot.entity";
 import { PageDto } from "src/utils/dtos/page.dto";
 import { PageOptionsDto } from "src/utils/dtos/pageOption.dto";
 import { PageMetaDto } from "src/utils/dtos/pageMeta.dto";
-import { isNumber } from "class-validator";
+import * as dayjs from "dayjs";
+import { isKeyOf } from "src/utils/utils";
+import { Booking } from "src/booking/booking.entity";
 @Injectable()
 export class ParkingLocationService {
   constructor(
@@ -26,109 +35,132 @@ export class ParkingLocationService {
   async search(
     searchParkingLocationDto: SearchParkingLocationDto,
     pageOptionsDto: PageOptionsDto
-  ): Promise<PageDto<ParkingLocation>> {
+  ): Promise<PageDto<ParkingLocation & { distance: number; minPrice: number }>> {
     const {
       lat,
       lng,
       services,
-      startAt = 0,
-      endAt = 86400,
-      width = 0,
-      length = 0,
-      height = 0,
+      startAt = dayjs(),
+      endAt = dayjs().add(30, "minutes"),
+      width = 200,
+      length = 200,
+      height = 200,
       radius = 10,
       priceStartAt = 0,
       priceEndAt = 10000,
+      orderBy = "distance",
       ...query
     } = searchParkingLocationDto;
-    const { skip, take } = pageOptionsDto;
+    const { skip = 0, take = 20 } = pageOptionsDto;
     const filteredQuery = omitBy(query, isUndefined);
-    let queryBuilder = this.parkingLocationRepository
+    const queryBuilder = this.parkingLocationRepository
       .createQueryBuilder("parkingLocation")
-      .innerJoinAndSelect("parkingLocation.parkingSlots", "parkingSlot");
-
-    queryBuilder = queryBuilder
-      .andWhere(`parkingSlot.price BETWEEN ${priceStartAt} AND ${priceEndAt}`)
-      .andWhere((qb) => {
-        const subQuery = qb
-          .subQuery()
-          .select("parkingSlot2.id")
-          .from(ParkingSlot, "parkingSlot2")
-          .where(filteredQuery)
-          .getQuery();
-        return "parkingSlot.id IN " + subQuery;
-      });
-    const limmitedStartAt = startAt % 86400;
-    const limitedEndAt = endAt & 86400;
-    queryBuilder = queryBuilder.where(
-      new Brackets((qb) => {
-        qb.where(" :startAt >= parkingSlot.startAt AND :endAt <= parkingSlot.endAt", {
-          startAt: limmitedStartAt,
-          endAt: limitedEndAt,
-        }).orWhere(
-          new Brackets((qb2) => {
-            qb2
-              .where("parkingSlot.startAt > parkingSlot.endAt")
-              .andWhere(
-                new Brackets((qb3) => {
-                  qb3.where(":startAt >= parkingSlot.startAt").orWhere(":startAt < parkingSlot.endAt");
-                })
-              )
-              .andWhere(
-                new Brackets((qb4) => {
-                  qb4.where(":endAt > parkingSlot.startAt").orWhere(":endAt <= parkingSlot.endAt");
-                })
-              )
-              .andWhere(
-                new Brackets((qb5) => {
-                  qb5
-                    .where(":startAt < :endAt")
-                    .orWhere(":startAt >= parkingSlot.startAt")
-                    .orWhere(":endAt <= parkingSlot.endAt");
-                })
-              );
-          }),
-          {
-            startAt: limitedEndAt,
-            endAt: 86400,
-          }
-        );
-      })
-    );
-
-    queryBuilder = queryBuilder.andWhere("parkingSlot.width >= :width", { width });
-    queryBuilder = queryBuilder.andWhere("parkingSlot.length >= :length", { length });
-    queryBuilder = queryBuilder.andWhere("parkingSlot.height >= :height", { height });
+      .innerJoin("parkingLocation.parkingSlots", "parkingSlot", "parkingSlot.deleteAt IS NULL")
+      .innerJoin(Booking, "booking", "booking.parkingSlotId = parkingSlot.id")
+      .innerJoin("parkingSlot.services", "service")
+      .innerJoinAndSelect("parkingLocation.images", "image", "image.deleteAt IS NULL")
+      .innerJoin("parkingLocation.partner", "partner", "partner.deleteAt IS NULL")
+      .innerJoin("partner.user", "user", "user.deleteAt IS NULL")
+      .innerJoin("parkingSlot.type", "type", "type.deleteAt IS NULL")
+      .select([
+        `DISTINCT parkingLocation.id AS "id"`,
+        `parkingLocation.name AS "name"`,
+        `parkingLocation.address AS "address"`,
+        `parkingLocation.description AS "description"`,
+        `parkingLocation.lat AS "lat"`,
+        `parkingLocation.lng AS "lng"`,
+        `parkingLocation.access AS "access"`,
+        `parkingLocation.createAt AS "createAt"`,
+        `parkingLocation.deleteAt AS "deleteAt"`,
+        `parkingLocation.partnerId AS "partnerId"`,
+        `parkingLocation.paymentMethodId AS "paymentMethodId"`,
+        `parkingLocation.pricingOptionId AS "pricingOptionId"`,
+        `image.url AS "image"`,
+        `parkingSlot.price AS "minPrice"`,
+      ])
+      .addSelect(
+        `earth_distance(ll_to_earth(parkingLocation.lat, parkingLocation.lng),ll_to_earth(:lat, :lng)) / 1000 AS distance`
+      );
     if (services) {
       const serviceIds = services.split("-");
-      queryBuilder = queryBuilder
-        .leftJoinAndSelect("parkingSlot.services", "service")
-        .where("service.id IN (:...serviceIds)", { serviceIds });
+      queryBuilder.where("service.id IN (:...serviceIds)", { serviceIds });
     }
-    queryBuilder = queryBuilder
-      .innerJoinAndSelect("parkingLocation.images", "image")
-      .innerJoinAndSelect("parkingLocation.partner", "partner")
-      .innerJoinAndSelect(User, "user", "user.partnerId = partner.id")
-      .innerJoinAndSelect("parkingSlot.type", "type");
-    queryBuilder = queryBuilder.take(take).skip(skip);
-    let data = await queryBuilder.getMany();
-    if (isNumber(lat) && isNumber(lng)) {
-      data = data.filter((parkingLocation) => {
-        const distance = this.calculateDistance({ lat, lng }, { lat: parkingLocation.lat, lng: parkingLocation.lng });
-        if (distance > radius) return false;
-        return true;
-      });
-    }
-    const dataWithPrice: (ParkingLocation & { minPrice: number })[] = data.map((parkingLocation) => {
-      const minPrice = parkingLocation.parkingSlots.reduce(
-        (minPrice, { price: priceB }) => (minPrice < priceB ? minPrice : priceB),
-        1000
+    if (lat && lng && radius) {
+      queryBuilder.andWhere(
+        "(earth_distance(ll_to_earth(parkingLocation.lat, parkingLocation.lng), ll_to_earth(:lat, :lng)) / 1000) < :radius",
+        {
+          lat,
+          lng,
+          radius,
+        }
       );
-      return { ...parkingLocation, minPrice };
+    }
+    queryBuilder
+      .andWhere(
+        new Brackets((qb) => {
+          qb.where(" :startAt >= parkingSlot.startAt AND :endAt <= parkingSlot.endAt").orWhere(
+            new Brackets((qb2) => {
+              qb2
+                .where("parkingSlot.startAt > parkingSlot.endAt")
+                .andWhere(
+                  new Brackets((qb3) => {
+                    qb3.where(":startAt >= parkingSlot.startAt").orWhere(":startAt < parkingSlot.endAt");
+                  })
+                )
+                .andWhere(
+                  new Brackets((qb4) => {
+                    qb4.where(":endAt > parkingSlot.startAt").orWhere(":endAt <= parkingSlot.endAt");
+                  })
+                )
+                .andWhere(
+                  new Brackets((qb5) => {
+                    qb5
+                      .where(":startAt < :endAt")
+                      .orWhere(":startAt >= parkingSlot.startAt")
+                      .orWhere(":endAt <= parkingSlot.endAt");
+                  })
+                );
+            }),
+            {
+              startAt: this.timeToSeconds(dayjs(startAt)),
+              endAt: this.timeToSeconds(dayjs(startAt).add(24, "hours")),
+            }
+          );
+        })
+      )
+      .andWhere("booking.startAt NOT BETWEEN :bookingStartAt AND :bookingEndAt", {
+        bookingStartAt: startAt.toISOString(),
+        bookingEndAt: endAt.toISOString(),
+      })
+      .andWhere("parkingSlot.length >= :length", { length })
+      .andWhere("parkingSlot.height >= :height", { height })
+      .andWhere("parkingSlot.height >= :width", { width })
+      .andWhere("parkingSlot.price BETWEEN :priceStartAt AND :priceEndAt", {
+        priceStartAt: priceStartAt,
+        priceEndAt: priceEndAt,
+      })
+      .andWhere(filteredQuery)
+      .skip(skip)
+      .take(take)
+      .orderBy(orderBy, "ASC");
+    queryBuilder.setParameters({
+      lat,
+      lng,
+      radius,
     });
-    const itemCount = dataWithPrice.length;
+    const combineParkedLocations = (data) => {
+      const groupedData = groupBy(data, "id");
+      return map(groupedData, (group) => ({
+        ...omit(group[0], "image"),
+        images: map(group, "image"),
+      })) as Array<ParkingLocation & { distance: number; minPrice: number }>;
+    };
+
+    const data = await queryBuilder.getRawMany();
+    const combinedData = combineParkedLocations(data);
+    const itemCount = combinedData.length;
     const pageMetaDto = new PageMetaDto({ itemCount, pageOptionsDto });
-    return new PageDto(dataWithPrice, pageMetaDto);
+    return new PageDto(combinedData, pageMetaDto);
   }
   async create(userId: number, createParkingLocationDto: CreateParkingLocationDto) {
     const { pricingOptionId, paymentMethodId, images } = createParkingLocationDto;
@@ -153,7 +185,7 @@ export class ParkingLocationService {
     return await this.parkingLocationRepository.save(parkingLocation);
   }
 
-  async findAll(pageOptionsDto: PageOptionsDto, partnerId?: number) {
+  async findAll(props: { searchDto: SearchParkingLocationDto; pageOptionsDto: PageOptionsDto; partnerId?: number }) {
     const relations = {
       partner: true,
       paymentMethod: true,
@@ -161,21 +193,21 @@ export class ParkingLocationService {
       images: true,
       parkingSlots: true,
     };
-    if (!partnerId) {
-      const data = await this.parkingLocationRepository.find({
-        relations,
-        take: pageOptionsDto.take,
-        skip: pageOptionsDto.skip,
-      });
-      const itemCount = data.length;
-      const pageMetaDto = new PageMetaDto({ itemCount, pageOptionsDto });
-      return new PageDto(data, pageMetaDto);
-    }
+    const { skip, take, orderBy, order } = props.pageOptionsDto;
+    const { field, keyword } = props.searchDto;
+
+    const where: FindOptionsWhere<ParkingLocation> = {
+      partner: { id: props.partnerId },
+    };
+    if (field && isKeyOf<ParkingLocation>(field)) set(where, field, Like(`%${keyword}%`));
     const data = await this.parkingLocationRepository.find({
-      where: { partner: { id: partnerId } },
-      take: pageOptionsDto.take,
-      skip: pageOptionsDto.skip,
+      where,
+      take,
+      skip,
       relations,
+      order: {
+        [orderBy]: order,
+      },
     });
     const dataWithPrice: (ParkingLocation & { minPrice: number })[] = data.map((parkingLocation) => {
       const minPrice = parkingLocation.parkingSlots.reduce(
@@ -185,7 +217,7 @@ export class ParkingLocationService {
       return { ...parkingLocation, minPrice };
     });
     const itemCount = dataWithPrice.length;
-    const pageMetaDto = new PageMetaDto({ itemCount, pageOptionsDto });
+    const pageMetaDto = new PageMetaDto({ itemCount, pageOptionsDto: props.pageOptionsDto });
     return new PageDto(dataWithPrice, pageMetaDto);
   }
 
@@ -263,5 +295,11 @@ export class ParkingLocationService {
 
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return 6371 * c;
+  };
+  timeToSeconds = (time: dayjs.Dayjs) => {
+    const hours = time.hour();
+    const minutes = time.minute();
+    const seconds = time.second();
+    return hours * 3600 + minutes * 60 + seconds;
   };
 }

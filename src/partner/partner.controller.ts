@@ -4,6 +4,7 @@ import { CreatePartnerDto } from "./dto/createPartner.dto";
 import { UpdatePartnerDto } from "./dto/updatePartner.dto";
 import { PageOptionsDto } from "src/utils/dtos/pageOption.dto";
 import RolesGuard from "src/role/role.guard";
+import { SearchPartnerDto } from "./dto/searchPartner.dto";
 
 @Controller("partner")
 export class PartnerController {
@@ -16,9 +17,9 @@ export class PartnerController {
   }
 
   @Get()
-  @UseGuards(RolesGuard("admin"))
-  findAll(@Query() pageOptionsDto: PageOptionsDto) {
-    return this.partnerService.findAll(pageOptionsDto);
+  // @UseGuards(RolesGuard("admin"))
+  findAll(@Query() pageOptionsDto: PageOptionsDto, @Query() searchPartnerDto: SearchPartnerDto) {
+    return this.partnerService.findAll(searchPartnerDto, pageOptionsDto);
   }
 
   @Get(":id")

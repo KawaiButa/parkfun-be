@@ -76,7 +76,12 @@ export class UserService {
   }
 
   async update(id: number, updateDto: Partial<Omit<User, "id">>) {
-    const result = await this.userRepository.update(id, updateDto);
+    const oldUser = await this.userRepository.findOne({ where: { id } });
+    let image = oldUser.image;
+    if (oldUser.image.url.includes("defaultUserAvatar")) {
+      image = await this.imageService.create(updateDto.image);
+    }
+    const result = await this.userRepository.update(id, { ...updateDto, image });
     if (!result.affected) throw new NotFoundException("Cannot find the user");
     const user = await this.userRepository.findOneBy({ id });
     return user;

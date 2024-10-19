@@ -49,7 +49,7 @@ export class ParkingLocation {
   @JoinColumn()
   paymentMethod?: PaymentMethod;
 
-  @ManyToOne(() => PricingOption, { cascade: true })
+  @ManyToOne(() => PricingOption, (pricingOption) => pricingOption.parkingLocations, { eager: true })
   @JoinColumn()
   pricingOption: PricingOption;
 

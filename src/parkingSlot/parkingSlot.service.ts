@@ -106,7 +106,12 @@ export class ParkingSlotService {
       },
     });
   }
-
+  async update(bookingId: number, data: Partial<Omit<ParkingSlot, "id">>) {
+    const booking = await this.parkingSlotRepository.findOne({ where: { id: bookingId } });
+    if (!booking) throw new NotFoundException("Cannot find the parking slot");
+    await this.parkingSlotRepository.update(bookingId, data);
+    return await this.parkingSlotRepository.findOne({ where: { id: bookingId } });
+  }
   remove(id: number) {
     return this.parkingSlotRepository.delete(id);
   }

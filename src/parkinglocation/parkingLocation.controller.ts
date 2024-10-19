@@ -25,12 +25,16 @@ export class ParkingLocationController {
   findAll(
     @Req() request: Request & { user: { role: string; id: number; partner: Partner } },
     @Query() searchQuery: SearchParkingLocationDto,
-    @Query() pageOptions: PageOptionsDto
+    @Query() pageOptionsDto: PageOptionsDto
   ) {
     const { user } = request;
-    if (!user || user.role === "user") return this.parkingLocationService.search(searchQuery, pageOptions);
-    if (!user.partner) return this.parkingLocationService.findAll(pageOptions);
-    return this.parkingLocationService.findAll(pageOptions, user.partner.id);
+    if (!user || user.role === "user") return this.parkingLocationService.search(searchQuery, pageOptionsDto);
+    if (!user.partner) return this.parkingLocationService.findAll({ searchDto: searchQuery, pageOptionsDto });
+    return this.parkingLocationService.findAll({
+      searchDto: searchQuery,
+      pageOptionsDto,
+      partnerId: user.partner.id,
+    });
   }
 
   @Get(":id")

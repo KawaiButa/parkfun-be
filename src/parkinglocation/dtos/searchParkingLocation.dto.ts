@@ -1,56 +1,68 @@
-import { IsBoolean, IsNumber, IsOptional, IsString, ValidateIf } from "class-validator";
+import { IsBoolean, IsDate, IsNumber, IsOptional, IsString, ValidateIf } from "class-validator";
 
 export class SearchParkingLocationDto {
-  @IsNumber()
+  @IsString()
   @IsOptional()
-  public lat?: number;
+  field?: string;
+
+  @ValidateIf((obj) => obj.field)
+  @IsString()
+  keyword?: string;
 
   @IsNumber()
   @IsOptional()
-  public lng?: number;
+  lat?: number;
+
+  @IsNumber()
+  @IsOptional()
+  lng?: number;
 
   @ValidateIf((obj) => obj.lat && obj.lng)
   @IsNumber()
   @IsOptional()
-  public radius?: number;
+  radius?: number;
 
   @IsOptional()
-  @IsNumber()
-  public startAt?: number;
+  @IsDate()
+  startAt?: Date;
 
   @IsOptional()
-  @IsNumber()
-  public endAt?: number;
+  @IsDate()
+  endAt?: Date;
 
   @IsOptional()
   @IsBoolean()
-  public isAvailable?: boolean;
+  isAvailable?: boolean;
 
   @IsOptional()
   @IsNumber()
-  public priceStartAt?: number;
+  priceStartAt?: number;
 
   @IsOptional()
   @IsNumber()
-  public priceEndAt?: number;
+  priceEndAt?: number;
 
   @IsOptional()
   @IsNumber()
-  public width?: number;
+  width?: number;
 
   @IsOptional()
   @IsNumber()
-  public length?: number;
+  length?: number;
 
   @IsOptional()
   @IsNumber()
-  public height?: number;
+  height?: number;
 
   @IsOptional()
   @IsNumber()
-  public type?: number;
+  type?: number;
 
   @IsOptional()
   @IsString()
-  public services?: string;
+  services?: string;
+
+  @IsOptional()
+  @IsNumber()
+  orderBy?: string;
 }

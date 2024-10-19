@@ -5,15 +5,16 @@ import { UpdateUserDto } from "./dtos/updateUser.dto";
 import { AuthGuard } from "@nestjs/passport";
 import RolesGuard from "src/role/role.guard";
 @Controller("user")
-@UseGuards(AuthGuard("jwt"), RolesGuard("admin"))
 export class UserController {
   constructor(private userService: UserService) {}
   @Get()
+  @UseGuards(AuthGuard("jwt"), RolesGuard("admin"))
   getAll() {
     return this.userService.getAll();
   }
 
   @Get(":id")
+  @UseGuards(AuthGuard("jwt"), RolesGuard())
   getBy(@Param("id") id: number) {
     return this.userService.getOne(id);
   }
@@ -23,11 +24,13 @@ export class UserController {
   }
 
   @Patch(":id")
+  @UseGuards(AuthGuard("jwt"), RolesGuard())
   update(@Param("id") id: number, @Body() body: UpdateUserDto) {
     return this.userService.update(id, body);
   }
 
   @Delete(":id")
+  @UseGuards(AuthGuard("jwt"), RolesGuard("admin"))
   delete(@Param("id") id: number) {
     this.userService.delete(id);
   }

@@ -2,7 +2,7 @@ import { BadRequestException, Injectable, NotFoundException } from "@nestjs/comm
 import { CreatePartnerDto } from "./dto/createPartner.dto";
 import { UpdatePartnerDto } from "./dto/updatePartner.dto";
 import { InjectRepository } from "@nestjs/typeorm";
-import { DataSource, Repository } from "typeorm";
+import { DataSource, FindOptionsWhere, Like, Repository } from "typeorm";
 import { Partner } from "./partner.entity";
 import { PartnerTypeService } from "src/partnerType/partnerType.service";
 import { UserService } from "src/user/user.service";
@@ -11,6 +11,8 @@ import { PageDto } from "src/utils/dtos/page.dto";
 import { PageOptionsDto } from "src/utils/dtos/pageOption.dto";
 import { isKeyOf } from "src/utils/utils";
 import { PageMetaDto } from "src/utils/dtos/pageMeta.dto";
+import { SearchPartnerDto } from "./dto/searchPartner.dto";
+import { set } from "lodash";
 @Injectable()
 export class PartnerService {
   constructor(
@@ -42,20 +44,28 @@ export class PartnerService {
     }
   }
 
-  async findAll(pageOptionsDto: PageOptionsDto): Promise<PageDto<Partner>> {
+  async findAll(searchPartnerDto: SearchPartnerDto, pageOptionsDto: PageOptionsDto): Promise<PageDto<Partner>> {
     const { skip, take, orderBy, order } = pageOptionsDto;
+    const { field, keyword, typeId } = searchPartnerDto;
+
+    const where: FindOptionsWhere<Partner> = {
+      type: { id: typeId },
+    };
+    if (field && isKeyOf<Partner>(field)) set(where, field, Like(`%${keyword}%`));
     if (!isKeyOf<Partner>(orderBy)) throw new BadRequestException("The orderBy parameter must be a key in partner.");
-    const data = await this.partnerRepository.find({
-      skip: skip,
-      take: take,
+    const [data, count] = await this.partnerRepository.findAndCount({
+      where,
+      skip,
+      take,
       order: {
         [orderBy]: order,
       },
       relations: {
         type: true,
+        user: true,
       },
     });
-    const itemCount = data.length;
+    const itemCount = count;
     const pageMetaDto = new PageMetaDto({ itemCount, pageOptionsDto });
     return new PageDto(data, pageMetaDto);
   }
