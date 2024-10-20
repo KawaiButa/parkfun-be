@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
-import { Repository } from "typeorm";
+import { FindOptionsWhere, Repository } from "typeorm";
 import { Booking, BookingStatus } from "./booking.entity";
 import { CreateBookingDto } from "./dtos/createBooking.dto";
 import { UserService } from "src/user/user.service";
@@ -12,6 +12,7 @@ import { PageDto } from "src/utils/dtos/page.dto";
 import { SearchBookingDto } from "./dtos/searchBooking.dto";
 import { ParkingSlot } from "src/parkingSlot/parkingSlot.entity";
 import { ParkingLocation } from "src/parkinglocation/parkingLocation.entity";
+import * as dayjs from "dayjs";
 
 @Injectable()
 export class BookingService {
@@ -64,7 +65,7 @@ export class BookingService {
   }
   async create(createBookingDto: CreateBookingDto, userId: number) {
     const { parkingSlotId, serviceIds, startAt, endAt } = createBookingDto;
-    if (startAt < endAt) throw new BadRequestException("The startAt must be before endAt");
+    if (dayjs(startAt).isAfter(endAt)) throw new BadRequestException("The startAt must be before endAt");
     const [user, parkingSlot, services] = await Promise.all([
       this.userService.getOne(userId),
       this.parkingSlotService.findOne(parkingSlotId),
@@ -72,6 +73,10 @@ export class BookingService {
     ]);
     if (!user) throw new NotFoundException("User not found");
     if (!parkingSlot) throw new NotFoundException("Parking slot not found");
+    const [fee, amount] = await Promise.all([
+      this.parkingSlotService.calculateFee(parkingSlotId),
+      this.parkingSlotService.calculateAmount(parkingSlotId, createBookingDto.startAt, createBookingDto.endAt),
+    ]);
     const booking = this.bookingRepository.create({
       ...createBookingDto,
       user,
@@ -79,6 +84,8 @@ export class BookingService {
       services,
       startAt,
       endAt,
+      fee,
+      amount,
       status: BookingStatus.PENDING,
     });
     return await this.bookingRepository.save(booking);
@@ -89,7 +96,7 @@ export class BookingService {
     await this.bookingRepository.update(bookingId, data);
     return await this.bookingRepository.findOne({ where: { id: bookingId } });
   }
-  findOneBy(param: Partial<Booking>) {
+  findOneBy(param: FindOptionsWhere<Booking>) {
     return this.bookingRepository.findOne({ where: param });
   }
 }

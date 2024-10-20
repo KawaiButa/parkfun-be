@@ -76,9 +76,14 @@ export class UserService {
   }
 
   async update(id: number, updateDto: Partial<Omit<User, "id">>) {
-    const oldUser = await this.userRepository.findOne({ where: { id } });
+    const oldUser = await this.userRepository.findOne({
+      where: { id },
+      relations: {
+        image: true,
+      },
+    });
     let image = oldUser.image;
-    if (oldUser.image.url.includes("defaultUserAvatar")) {
+    if (oldUser.image.url.includes("defaultUserAvatar") && updateDto.image) {
       image = await this.imageService.create(updateDto.image);
     }
     const result = await this.userRepository.update(id, { ...updateDto, image });

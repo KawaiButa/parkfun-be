@@ -47,6 +47,7 @@
     "cache-manager": "^4.1.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
+    "dayjs": "^1.11.13",
     "googleapi": "^1.0.2",
     "googleapis": "^144.0.0",
     "lodash": "^4.17.21",

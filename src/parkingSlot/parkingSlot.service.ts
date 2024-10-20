@@ -10,6 +10,8 @@ import { Image } from "src/image/image.entity";
 import { PageOptionsDto } from "src/utils/dtos/pageOption.dto";
 import { PageDto } from "src/utils/dtos/page.dto";
 import { PageMetaDto } from "src/utils/dtos/pageMeta.dto";
+import { getDuration, timeToSeconds } from "src/utils/utils";
+import * as dayjs from "dayjs";
 
 @Injectable()
 export class ParkingSlotService {
@@ -114,5 +116,17 @@ export class ParkingSlotService {
   }
   remove(id: number) {
     return this.parkingSlotRepository.delete(id);
+  }
+  async calculateFee(bookingId: number) {
+    const parkingSlot = await this.parkingSlotRepository.findOne({ where: { id: bookingId } });
+    if (!parkingSlot) throw new NotFoundException("Invalid slot");
+    const feeRate = parkingSlot.parkingLocation.pricingOption;
+    if (feeRate.name === "fixed") return feeRate.value;
+    return (feeRate.value / 100) * parkingSlot.price;
+  }
+  async calculateAmount(parkingSlotId: any, startAt: Date, endAt: Date) {
+    const parkingSlot = await this.parkingSlotRepository.findOne({ where: { id: parkingSlotId } });
+    if (!parkingSlot) throw new NotFoundException("Invalid slot");
+    return (getDuration(timeToSeconds(dayjs(startAt)), timeToSeconds(dayjs(endAt))) / 3600) * parkingSlot.price;
   }
 }

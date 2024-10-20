@@ -1,4 +1,4 @@
-import { ConflictException, Injectable, NotFoundException } from "@nestjs/common";
+import { Injectable, NotFoundException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { BookingService } from "src/booking/booking.service";
 import { UserService } from "src/user/user.service";
@@ -32,22 +32,16 @@ export default class StripePaymentService {
     });
   }
   async charge(booking: Booking) {
-    try {
-      this.scheduleRegistry.getTimeout("" + booking.parkingSlot.id + "_pending");
-      throw new ConflictException("Someone else has been booking this slot within your selected time.");
-    } catch (e) {
-      if (!e) return;
-      this.scheduleRegistry.addTimeout(
-        "" + booking.parkingSlot.id + "_pending",
-        setTimeout(
-          () => {
-            this.bookingService.update(booking.id, { status: BookingStatus.CANCELLED });
-            this.parkingSlotService.update(booking.parkingSlot.id, { isAvailable: true });
-          },
-          this.getMillisecondsBetweenDates(new Date(), dayjs().add(15, "minutes"))
-        )
-      );
-    }
+    this.scheduleRegistry.addTimeout(
+      "" + booking.parkingSlot.id + "_pending",
+      setTimeout(
+        () => {
+          this.bookingService.update(booking.id, { status: BookingStatus.CANCELLED });
+          this.parkingSlotService.update(booking.parkingSlot.id, { isAvailable: true });
+        },
+        this.getMillisecondsBetweenDates(new Date(), dayjs().add(15, "minutes"))
+      )
+    );
     const { user } = booking;
     if (!user) throw new NotFoundException("You are not logged in");
     let customerId = user.stripeCustomerId;
@@ -66,7 +60,7 @@ export default class StripePaymentService {
               product_data: {
                 name: "parkfun-booking",
               },
-              unit_amount: Math.round(booking.amount * 100),
+              unit_amount: Math.round((booking.amount + booking.fee) * 100),
             },
             quantity: 1,
           },

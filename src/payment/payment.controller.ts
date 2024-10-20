@@ -14,34 +14,44 @@ import {
   UseGuards,
 } from "@nestjs/common";
 import { BookingDto } from "./dtos/booking.dto";
-import { User } from "src/user/user.entity";
 import { AuthGuard } from "@nestjs/passport";
 import RolesGuard from "src/role/role.guard";
 import StripePaymentService from "./stripe.service";
 import Stripe from "stripe";
 import { CACHE_MANAGER } from "@nestjs/cache-manager";
 import { Cache } from "cache-manager";
-import { UserService } from "src/user/user.service";
-import { SchedulerRegistry } from "@nestjs/schedule";
 import { BookingService } from "src/booking/booking.service";
 import { ParkingSlotService } from "src/parkingSlot/parkingSlot.service";
 import { BookingStatus } from "src/booking/booking.entity";
+import { SchedulerRegistry } from "@nestjs/schedule";
 @Controller("/payment")
 export class PaymentController {
   constructor(
     private paymentRecordService: StripePaymentService,
     private bookingService: BookingService,
     private parkingSlotService: ParkingSlotService,
-    private userService: UserService,
-    private scheduleRegistry: SchedulerRegistry,
+    private schedulerRegistry: SchedulerRegistry,
     @Inject(CACHE_MANAGER) private cacheManager: Cache
   ) {}
   @Post()
   @UseGuards(AuthGuard("jwt"), RolesGuard("user", "admin"))
-  async book(@Body() bookingDto: BookingDto, @Req() request: Request & { user: User }) {
+  async book(@Body() bookingDto: BookingDto, @Req() request: Request & { user: { id: number; role: string } }) {
     const { user } = request;
     if (!user) {
       throw new UnauthorizedException("You are not logged in");
+    }
+    try {
+      this.schedulerRegistry.getTimeout("" + bookingDto.parkingSlotId + "_pending");
+      const booking = await this.bookingService.findOneBy({
+        parkingSlot: { id: bookingDto.parkingSlotId },
+        user: { id: user.id },
+        status: BookingStatus.PENDING,
+      });
+      if (!booking) throw new ConflictException("Someone else has been booking this slot within your selected time.");
+      this.schedulerRegistry.deleteTimeout("" + bookingDto.parkingSlotId + "_pending");
+      await this.bookingService.update(booking.id, { status: BookingStatus.CANCELLED });
+    } catch (e) {
+      if (e instanceof ConflictException) throw e;
     }
     const [booking] = await Promise.all([
       this.bookingService.create(bookingDto, user.id),
@@ -53,7 +63,6 @@ export class PaymentController {
     this.cacheManager.set(session.customer, booking.id, { ttl: 5 * 60 } as any);
     return { clientSecret: session.client_secret };
   }
-
   @Post("/webhook")
   async handleEvent(@Headers("stripe-signature") signature: string, @Req() request: Request) {
     if (!signature) {
@@ -70,7 +79,10 @@ export class PaymentController {
     }
     return event;
   }
-
+  @Get("/fee/:parkingSlotId")
+  async getFee(@Req() request: Request, @Param("parkingSlotId") parkingSlotId: number) {
+    return this.parkingSlotService.calculateFee(parkingSlotId);
+  }
   @Get("resume/:bookingId")
   @UseGuards(AuthGuard("jwt"), RolesGuard("user", "admin"))
   async getResume(

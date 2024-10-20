@@ -13,7 +13,7 @@ import { PricingOptionService } from "src/pricingOption/pricingOption.service";
 import { PaymentMethodService } from "src/paymentMethod/paymentMethod.service";
 import { Partner } from "src/partner/partner.entity";
 import { User } from "src/user/user.entity";
-import { omitBy, isUndefined, set, map, omit, groupBy } from "lodash";
+import { omitBy, isUndefined, set, map, omit, groupBy, uniq } from "lodash";
 import { CreateParkingLocationDto } from "./dtos/createParkingLocation.dto";
 import { SearchParkingLocationDto } from "./dtos/searchParkingLocation.dto";
 import { UpdateParkingLocationDto } from "./dtos/updateParkingLocation.dto";
@@ -75,7 +75,8 @@ export class ParkingLocationService {
         `parkingLocation.partnerId AS "partnerId"`,
         `parkingLocation.paymentMethodId AS "paymentMethodId"`,
         `parkingLocation.pricingOptionId AS "pricingOptionId"`,
-        `image.url AS "image"`,
+        `parkingSlot.id AS "parkingSlotId"`,
+        `image.url AS image`,
         `parkingSlot.price AS "minPrice"`,
       ])
       .addSelect(
@@ -152,8 +153,9 @@ export class ParkingLocationService {
       const groupedData = groupBy(data, "id");
       return map(groupedData, (group) => ({
         ...omit(group[0], "image"),
-        images: map(group, "image"),
-      })) as Array<ParkingLocation & { distance: number; minPrice: number }>;
+        images: uniq(group.map(({ image }) => image)),
+        parkingSlotIds: uniq(group.map(({ parkingSlotId }) => parkingSlotId)),
+      })) as Array<ParkingLocation & { distance: number; minPrice: number; parkingSlotIds: number[] }>;
     };
 
     const data = await queryBuilder.getRawMany();

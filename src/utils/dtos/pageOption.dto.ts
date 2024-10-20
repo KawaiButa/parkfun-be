@@ -9,7 +9,7 @@ export class PageOptionsDto {
 
   @IsInt()
   @Min(1)
-  @Max(50)
+  @Max(200)
   @IsOptional()
   readonly take?: number = 10;
 
