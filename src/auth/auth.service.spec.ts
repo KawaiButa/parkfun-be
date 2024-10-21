@@ -10,6 +10,7 @@ import { JwtService } from "@nestjs/jwt";
 import { UserService } from "../user/user.service";
 import { ConfigService } from "@nestjs/config";
 import { Repository } from "typeorm";
+import { MailService } from "src/mail/mail.service";
 
 describe("AuthService", () => {
   let service: AuthService;
@@ -50,6 +51,9 @@ describe("AuthService", () => {
       return "";
     }),
   };
+  const mockMailService = {
+    sendUserConfirmation: jest.fn(),
+  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -70,6 +74,10 @@ describe("AuthService", () => {
         {
           provide: ConfigService,
           useValue: mockConfigService,
+        },
+        {
+          provide: MailService,
+          useValue: mockMailService,
         },
       ],
     }).compile();
@@ -125,7 +133,6 @@ describe("AuthService", () => {
 
       const result = await service.register(signUpDto);
 
-      expect(result.accessToken).toBe("testToken");
       expect(result.user).toEqual(mockUser);
       expect(userService.create).toHaveBeenCalledWith(
         expect.objectContaining({

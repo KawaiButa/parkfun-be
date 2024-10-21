@@ -75,7 +75,7 @@ export class UserService {
     return user;
   }
 
-  async update(id: number, updateDto: Partial<Omit<User, "id">>) {
+  async update(id: number, updateDto: Partial<Omit<User, "id" | "image"> & { image: string }>) {
     const oldUser = await this.userRepository.findOne({
       where: { id },
       relations: {
@@ -84,11 +84,16 @@ export class UserService {
     });
     let image = oldUser.image;
     if (oldUser.image.url.includes("defaultUserAvatar") && updateDto.image) {
-      image = await this.imageService.create(updateDto.image);
+      image = await this.imageService.create({ url: updateDto.image });
     }
     const result = await this.userRepository.update(id, { ...updateDto, image });
     if (!result.affected) throw new NotFoundException("Cannot find the user");
-    const user = await this.userRepository.findOneBy({ id });
+    const user = await this.userRepository.findOne({
+      where: { id },
+      relations: {
+        image: true,
+      },
+    });
     return user;
   }
   async getOne(id: number): Promise<User> {

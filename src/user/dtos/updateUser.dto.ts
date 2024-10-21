@@ -14,4 +14,8 @@ export class UpdateUserDto {
   @IsString()
   @IsOptional()
   phoneNumber?: string;
+
+  @IsString()
+  @IsOptional()
+  image?: string;
 }

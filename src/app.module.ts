@@ -21,9 +21,11 @@ import { PaymentRecordModule } from "./paymentRecord/paymentRecord.module";
 import { StatisticModule } from "./statistics/statistics.module";
 import { ScheduleModule } from "@nestjs/schedule";
 import { APP_FILTER } from "@nestjs/core";
+import { MailModule } from "./mail/mail.module";
 @Module({
   imports: [
     ConfigModule.forRoot({
+      isGlobal: true,
       validationSchema: Joi.object({
         DB_HOST: Joi.string().required(),
         DB_PORT: Joi.number().required(),
@@ -36,10 +38,15 @@ import { APP_FILTER } from "@nestjs/core";
         STRIPE_CURRENCY: Joi.string(),
         FRONTEND_URL: Joi.string(),
         STRIPE_WEBHOOK_SECRET: Joi.string(),
+        SENTRY_DNS: Joi.string(),
+        MAIL_ADDRESS: Joi.string(),
+        MAIL_PASSWORD: Joi.string(),
+        MAIL_HOST: Joi.string(),
       }),
     }),
     SentryModule.forRoot(),
     ScheduleModule.forRoot(),
+    MailModule,
     DatabaseModule,
     UserModule,
     AuthModule,

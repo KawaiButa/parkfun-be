@@ -71,6 +71,21 @@ export class BookingService {
       this.parkingSlotService.findOne(parkingSlotId),
       Promise.all(serviceIds.map(async (serviceId) => this.parkingServiceService.getOne(serviceId))),
     ]);
+    const existedBooking = await this.bookingRepository
+      .createQueryBuilder("booking")
+      .innerJoin("booking.parkingSlot", "parkingSlot")
+      .where("parkingSlot.id = :parkingSlotId")
+      .andWhere("booking.startAt > :startAt AND booking.endAt < :endAt")
+      .orWhere("booking.endAt > :endAt AND booking.startAt < :endAt")
+      .orWhere("booking.endAt > :startAt AND booking.startAt < :startAt")
+      .setParameters({
+        startAt: createBookingDto.startAt.toISOString(),
+        endAt: createBookingDto.endAt.toISOString(),
+        parkingSlotId,
+      })
+      .getOne();
+    if (existedBooking)
+      throw new BadRequestException("This parking slot has already been booked in your selected time.");
     if (!user) throw new NotFoundException("User not found");
     if (!parkingSlot) throw new NotFoundException("Parking slot not found");
     const [fee, amount] = await Promise.all([

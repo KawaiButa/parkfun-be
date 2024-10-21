@@ -10,6 +10,7 @@ import { Repository } from "typeorm";
 import { SchedulerRegistry } from "@nestjs/schedule";
 import * as dayjs from "dayjs";
 import { ParkingSlotService } from "src/parkingSlot/parkingSlot.service";
+import { MailService } from "src/mail/mail.service";
 @Injectable()
 export default class StripePaymentService {
   private stripe: Stripe;
@@ -21,7 +22,8 @@ export default class StripePaymentService {
     private userService: UserService,
     private bookingService: BookingService,
     private parkingSlotService: ParkingSlotService,
-    private scheduleRegistry: SchedulerRegistry
+    private scheduleRegistry: SchedulerRegistry,
+    private mailService: MailService
   ) {
     this.stripe = new Stripe(configService.get("STRIPE_SECRET_KEY"));
   }
@@ -111,6 +113,7 @@ export default class StripePaymentService {
         this.getMillisecondsBetweenDates(new Date(), booking.endAt)
       )
     );
+    await this.mailService.sendReceipt(paymentRecord);
     return booking;
   }
   getMillisecondsBetweenDates(date1, date2) {

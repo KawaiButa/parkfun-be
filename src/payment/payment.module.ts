@@ -8,6 +8,7 @@ import { CacheModule } from "@nestjs/cache-manager";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { PaymentRecord } from "src/paymentRecord/paymentRecord.entity";
 import { ParkingSlotModule } from "src/parkingSlot/parkingSlot.module";
+import { MailModule } from "src/mail/mail.module";
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { ParkingSlotModule } from "src/parkingSlot/parkingSlot.module";
     UserModule,
     BookingModule,
     ParkingSlotModule,
+    MailModule,
     CacheModule.register(),
     TypeOrmModule.forFeature([PaymentRecord]),
   ],

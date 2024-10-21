@@ -1,4 +1,4 @@
-import { Body, Controller, HttpCode, Post } from "@nestjs/common";
+import { Body, Controller, Get, HttpCode, Post, Query } from "@nestjs/common";
 import { AuthService } from "./auth.service";
 import { SignUpDto } from "./dtos/signup.dto";
 import { LoginDto } from "./dtos/login.dto";
@@ -21,5 +21,11 @@ export class AuthController {
   @HttpCode(200)
   loginWithGoogle(@Body() loginWithGoogleDto: LoginWithGoogleDto) {
     return this.authService.loginWithGoogle(loginWithGoogleDto);
+  }
+
+  @Get("/verify")
+  @HttpCode(200)
+  verifyUser(@Query("token") token: string) {
+    return this.authService.verifyUser(token);
   }
 }

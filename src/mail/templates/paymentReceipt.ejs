@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Receipt</title>
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      line-height: 1.6;
+      margin: 0;
+      padding: 0;
+      background-color: #000000;
+      color: #fff;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      background-color: #272624;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .header {
+      text-align: center;
+      background-color: #EBCB00;
+      color: #272624;
+      padding: 1px 0;
+      border-radius: 8px 8px 0 0;
+    }
+
+    .content {
+      margin: 20px 0;
+      color: #fff;
+    }
+
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+    }
+
+    .table th,
+    .table td {
+      padding: 10px;
+      text-align: left;
+      border-bottom: 1px solid #fff;
+    }
+
+    .table th {
+      color: #fff;
+    }
+
+    .booking-time {
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .booking-time p {
+      margin: 0;
+    }
+
+    .total {
+      text-align: right;
+      padding: 10px;
+      font-size: 1.25rem;
+      font-weight: bold;
+      background-color: #EBCB00;
+      color: #272624;
+      border-radius: 0 0 8px 8px;
+    }
+    .fee {
+      text-align: right;
+      font-size: 1rem;
+      font-weight: bold;
+      border-radius: 0 0 8px 8px;
+    }
+
+    .qr-container {
+      text-align: center;
+      margin: 20px 0;
+    }
+
+    .footer {
+      text-align: center;
+      color: #9E9E9E;
+      font-size: 0.75rem;
+      margin-top: 20px;
+    }
+
+    .footer .company-info {
+      font-size: 0.75rem;
+      margin-top: 20px;
+    }
+
+    .footer a {
+      color: #EBCB00;
+      text-decoration: none;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Payment Receipt</h1>
+    </div>
+    <div class="content">
+      <p>Hi <%= name %>, </p>
+      <p>Thank you for your purchase! Here are the details of your transaction:</p>
+      <!-- New fields -->
+      <p>
+        <strong>Parking Location: </strong><%= parkingLocation %>
+      </p>
+      <p>
+        <strong>Parking Slot: </strong><%= parkingSlot %>
+      </p>
+      <div class="booking-time">
+        <p>
+          <strong>Start Time: </strong><%= startTime %>
+        </p>
+        <p>
+          <strong>End Time: </strong><%= endTime %>
+        </p>
+      </div>
+      <% if (items && items.length > 0) { %>
+      <!-- Transaction Table -->
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Service</th>
+            <th>Price</th>
+            <th>Quantity</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody><% services.forEach(item => { %> <tr>
+            <td><%= item.name %> </td>
+            <td>$<%= item.price.toFixed(2) %> </td>
+            <td>1</td>
+            <td>$<%= (item.price * item.quantity).toFixed(2) %> </td>
+          </tr><% }) %>
+        </tbody>
+      </table>
+      <% } else { %>
+      <p>No service is selected.</p>
+      <% } %>
+      <p class="fee">Fee: <%= fee %> </p>
+      <p class="total">Total: $<%= total.toFixed(2) %> </p>
+      <p>To view your full receipt, please scan the QR code below:</p>
+      <div class="qr-container">
+        <img src="https://quickchart.io/qr?text=<%= encodeURIComponent(receiptUrl) %>&size=200" alt="QR Code">
+      </div>
+      <p>Or click <a href="<%= receiptUrl %>" style="color: #EBCB00;">here </a> to view your receipt online. </p>
+    </div>
+    <div class="footer">
+      <div style="text-align: center; color: #9e9e9e; font-size: 0.75rem; margin-top: 20px">
+        <p>© 2024 ParkFun. All rights reserved.</p>
+        <div style="font-size: 0.75rem; margin-top: 20px" class="company-info">
+          <p>
+            <strong>Golden Owl Solutions - Dedicated IT remote resource</strong>
+          </p>
+          <p>Tel: +84 79 7675 026</p>
+          <p>
+            <a href="https://goldenowl.asia/" target="_blank">Goldenowl.asia</a> | <a href="https://www.google.com/maps/place/Golden+Owl+Solutions" target="_blank">C0013, Sarina Apt, 62 Hoang The Thien, An Loi Dong, Thu Duc city, HCMC, Vietnam</a>
+          </p>
+          <p>
+            <a href="https://www.linkedin.com/company/golden-owl-consulting/" target="_blank">Linkedin</a> | <a href="https://www.facebook.com/goldenowl.asia" target="_blank">Facebook</a> | <a href="https://twitter.com/goldenowlasia" target="_blank">Twitter</a>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+
+</html>

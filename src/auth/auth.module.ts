@@ -9,6 +9,7 @@ import { JWTStrategy } from "./jwt.strategy";
 import { PassportModule } from "@nestjs/passport";
 import { UserModule } from "src/user/user.module";
 import { RoleModule } from "src/role/role.module";
+import { MailModule } from "src/mail/mail.module";
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { RoleModule } from "src/role/role.module";
         };
       },
     }),
+    MailModule,
     TypeOrmModule.forFeature([User]),
     UserModule,
     RoleModule,
