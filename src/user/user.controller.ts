@@ -13,6 +13,11 @@ export class UserController {
     return this.userService.getAll();
   }
 
+  @Get("/debug-sentry")
+  getError() {
+    throw new Error("My first Sentry error!");
+  }
+
   @Get(":id")
   @UseGuards(AuthGuard("jwt"), RolesGuard())
   getBy(@Param("id") id: number) {

@@ -17,5 +17,5 @@ export class PaymentMethod {
   createAt: Date;
 
   @DeleteDateColumn()
-  deleteAt: Date;
+  deleteAt?: Date;
 }

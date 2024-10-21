@@ -3,6 +3,7 @@ import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
 import { ConfigModule } from "@nestjs/config";
 import * as Joi from "@hapi/joi";
+import { SentryGlobalFilter, SentryModule } from "@sentry/nestjs/setup";
 import { DatabaseModule } from "./database/database.module";
 import { AuthModule } from "./auth/auth.module";
 import { UserModule } from "./user/user.module";
@@ -19,6 +20,7 @@ import { PaymentModule } from "./payment/payment.module";
 import { PaymentRecordModule } from "./paymentRecord/paymentRecord.module";
 import { StatisticModule } from "./statistics/statistics.module";
 import { ScheduleModule } from "@nestjs/schedule";
+import { APP_FILTER } from "@nestjs/core";
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -36,6 +38,7 @@ import { ScheduleModule } from "@nestjs/schedule";
         STRIPE_WEBHOOK_SECRET: Joi.string(),
       }),
     }),
+    SentryModule.forRoot(),
     ScheduleModule.forRoot(),
     DatabaseModule,
     UserModule,
@@ -54,6 +57,12 @@ import { ScheduleModule } from "@nestjs/schedule";
     StatisticModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_FILTER,
+      useClass: SentryGlobalFilter,
+    },
+  ],
 })
 export class AppModule {}

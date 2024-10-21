@@ -144,7 +144,7 @@ export class StatisticService {
     return results.map((query, index) => ({ label: labels[index], data: query }));
   }
 
-  private async getNewCustomersCount(startDate: Date, endDate: Date): Promise<number> {
+  async getNewCustomersCount(startDate: Date, endDate: Date): Promise<number> {
     return this.userRepository.count({
       where: {
         createAt: Between(startDate, endDate),
@@ -153,7 +153,7 @@ export class StatisticService {
     });
   }
 
-  private async getNewParkingLocationsCount(startDate: Date, endDate: Date): Promise<number> {
+  async getNewParkingLocationsCount(startDate: Date, endDate: Date): Promise<number> {
     return this.parkingLocationRepository.count({
       where: {
         createAt: Between(startDate, endDate),
@@ -161,7 +161,7 @@ export class StatisticService {
     });
   }
 
-  private async getNewPartnersCount(startDate: Date, endDate: Date): Promise<number> {
+  async getNewPartnersCount(startDate: Date, endDate: Date): Promise<number> {
     return this.partnerRepository.count({
       where: {
         createAt: Between(startDate, endDate),
@@ -169,7 +169,7 @@ export class StatisticService {
     });
   }
 
-  private async getBookingsCount(startDate: Date, endDate: Date): Promise<number> {
+  async getBookingsCount(startDate: Date, endDate: Date): Promise<number> {
     return this.bookingRepository.count({
       where: {
         createAt: Between(startDate, endDate),
@@ -178,7 +178,7 @@ export class StatisticService {
     });
   }
 
-  private async getTotalIncome(startDate: Date, endDate: Date): Promise<number> {
+  async getTotalIncome(startDate: Date, endDate: Date): Promise<number> {
     const result = await this.bookingRepository
       .createQueryBuilder("booking")
       .select("SUM(booking.amount)", "totalIncome")

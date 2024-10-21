@@ -5,11 +5,11 @@ import { IsNumber, IsNumberString, IsString } from "class-validator";
 export class UpdatePartnerDto extends PartialType(Partner) {
   @IsString()
   @IsNumberString()
-  phoneNumber: string;
+  phoneNumber?: string;
 
   @IsNumber()
-  typeId: number;
+  typeId?: number;
 
   @IsString()
-  name: string;
+  name?: string;
 }

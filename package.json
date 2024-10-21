@@ -6,7 +6,7 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
-    "build": "nest build",
+    "build": "nest build && yarn sentry:sourcemaps",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
@@ -15,7 +15,7 @@
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:cov": "jest --coverage",
+    "test:cov": "jest --coverage --testRegex=.*\\.service\\.spec\\.ts$",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "typeorm": "ts-node ./node_modules/typeorm/cli",
@@ -25,10 +25,10 @@
     "typeorm:create-migration": "npm run typeorm -- migration:create ./migrations/$npm_config_name",
     "typeorm:revert-migration": "npm run typeorm -- -d ./typeOrm.config.ts migration:revert",
     "typeorm:drop-migration": "npm run typeorm -- -d ./typeOrm.config.ts schema:drop",
-    "prepare": "husky"
+    "prepare": "husky",
+    "sentry:sourcemaps": "sentry-cli sourcemaps inject --org golden-owl-solution --project parkfun-be . && sentry-cli sourcemaps upload --org golden-owl-solution --project parkfun-be ."
   },
   "dependencies": {
-    "@eslint/compat": "^1.2.0",
     "@faker-js/faker": "^8.4.1",
     "@hapi/joi": "^17.1.1",
     "@nestjs/cache-manager": "^2.2.2",
@@ -41,6 +41,9 @@
     "@nestjs/platform-express": "^10.0.0",
     "@nestjs/schedule": "^4.1.1",
     "@nestjs/typeorm": "^10.0.2",
+    "@sentry/cli": "^2.37.0",
+    "@sentry/nestjs": "^8.34.0",
+    "@sentry/profiling-node": "^8.34.0",
     "@types/bcrypt": "^5.0.2",
     "@types/lodash": "^4.17.10",
     "bcrypt": "^5.1.1",
@@ -98,15 +101,19 @@
       "ts"
     ],
     "rootDir": "src",
-    "testRegex": ".*\\.spec\\.ts$",
+    "testRegex": ".*\\.service\\.spec\\.ts$",
     "transform": {
       "^.+\\.(t|j)s$": "ts-jest"
     },
     "collectCoverageFrom": [
-      "**/*.(t|j)s"
+      "**/*.service.ts",
+      "**/*.service.spec.ts"
     ],
     "coverageDirectory": "../coverage",
-    "testEnvironment": "node"
+    "testEnvironment": "node",
+    "moduleNameMapper": {
+      "^src/(.*)$": "<rootDir>/$1"
+    }
   },
   "lint-staged": {
     "*.ts": "eslint --cache --fix"

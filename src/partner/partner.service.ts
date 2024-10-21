@@ -28,7 +28,7 @@ export class PartnerService {
     try {
       const partnerType = await this.partnerTypeService.get({ id: createPartnerDto.typeId });
       const hashedPassword = await bcrypt.hash(createPartnerDto.password, 10);
-      const user = await this.userService.create({ ...createPartnerDto, password: hashedPassword });
+      const user = await this.userService.create({ ...createPartnerDto, password: hashedPassword, role: "partner" });
       const partner = this.partnerRepository.create({
         ...createPartnerDto,
         type: partnerType,
@@ -98,6 +98,7 @@ export class PartnerService {
       }),
       this.partnerTypeService.get({ id: typeId }),
     ]);
+    if (!partnerEntity) throw new NotFoundException("Partner not found");
     const partner = await this.partnerRepository.preload({
       ...partnerEntity,
       ...data,
@@ -105,8 +106,7 @@ export class PartnerService {
       user: { ...partnerEntity.user, name, phoneNumber },
     });
     const updateResult = this.partnerRepository.save(partner);
-    if (updateResult) return updateResult;
-    throw new NotFoundException("Partner not found");
+    return updateResult;
   }
 
   async delete(id: number) {
