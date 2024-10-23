@@ -19,7 +19,6 @@ export class SearchParkingLocationDto {
 
   @ValidateIf((obj) => obj.lat && obj.lng)
   @IsNumber()
-  @IsOptional()
   radius?: number;
 
   @IsOptional()

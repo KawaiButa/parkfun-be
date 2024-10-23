@@ -44,7 +44,7 @@ export class AuthService {
       },
     });
     if (!user) throw new UnauthorizedException("Invalid email or password");
-    // if (!user.isVerfied) throw new UnauthorizedException("This email is not verified");
+    if (!user.isVerified) throw new UnauthorizedException("This account is not verified");
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       throw new UnauthorizedException("Invalid email or password");
@@ -69,6 +69,19 @@ export class AuthService {
     );
     await this.mailService.sendUserConfirmation(user, verificationToken);
     return { user };
+  }
+  async resentEmailVerification(email: string) {
+    const user = await this.userService.getOneBy({ email: email });
+    if (!user) throw new BadRequestException("User not found");
+    const verificationToken = this.jwtService.sign(
+      { id: user.id, email: user.email },
+      {
+        secret: this.configService.get("MAIL_VERFICATION_SECRET"),
+        expiresIn: +this.configService.get("MAIL_VERFICATION_EXPIRES"),
+      }
+    );
+    await this.mailService.sendUserConfirmation(user, verificationToken);
+    return "Email verification link has been sent";
   }
   async loginWithGoogle(@Body() loginWithGoogleDto: LoginWithGoogleDto) {
     const { credential, clientId } = loginWithGoogleDto;
@@ -96,7 +109,7 @@ export class AuthService {
       });
       const user = await this.userService.getOne(payload.id);
       if (!user) throw new BadRequestException("Invalid token");
-      // this.userService.update(user.id, { isVerfied: true });
+      this.userService.update(user.id, { isVerified: true });
       return "Successfully verify user account";
     } catch {
       throw new UnauthorizedException();

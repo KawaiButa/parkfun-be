@@ -24,6 +24,11 @@ export class CreateUserTable1634567890125 implements MigrationInterface {
             isNullable: false,
           },
           {
+            name: "isVerified",
+            type: "boolean",
+            default: false,
+          },
+          {
             name: "partnerId",
             type: "int",
             isNullable: true,

@@ -28,4 +28,10 @@ export class AuthController {
   verifyUser(@Query("token") token: string) {
     return this.authService.verifyUser(token);
   }
+
+  @Get("/resend-email")
+  @HttpCode(200)
+  resendEmailVerification(@Query("email") email: string) {
+    this.authService.resentEmailVerification(email);
+  }
 }

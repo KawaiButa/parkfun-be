@@ -1,4 +1,4 @@
-import "./instrument";
+// import "./instrument";
 import { NestFactory, Reflector } from "@nestjs/core";
 import { AppModule } from "./app.module";
 import { ClassSerializerInterceptor, ValidationPipe } from "@nestjs/common";

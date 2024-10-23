@@ -3,7 +3,7 @@ import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
 import { ConfigModule } from "@nestjs/config";
 import * as Joi from "@hapi/joi";
-import { SentryGlobalFilter, SentryModule } from "@sentry/nestjs/setup";
+import { SentryGlobalFilter } from "@sentry/nestjs/setup";
 import { DatabaseModule } from "./database/database.module";
 import { AuthModule } from "./auth/auth.module";
 import { UserModule } from "./user/user.module";
@@ -44,7 +44,7 @@ import { MailModule } from "./mail/mail.module";
         MAIL_HOST: Joi.string(),
       }),
     }),
-    SentryModule.forRoot(),
+    // SentryModule.forRoot(),
     ScheduleModule.forRoot(),
     MailModule,
     DatabaseModule,

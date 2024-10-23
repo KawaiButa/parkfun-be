@@ -29,7 +29,6 @@
     "sentry:sourcemaps": "sentry-cli sourcemaps inject --org golden-owl-solution --project parkfun-be . && sentry-cli sourcemaps upload --org golden-owl-solution --project parkfun-be ."
   },
   "dependencies": {
-    "@eslint/compat": "^1.2.0",
     "@faker-js/faker": "^8.4.1",
     "@hapi/joi": "^17.1.1",
     "@nestjs-modules/mailer": "^2.0.2",

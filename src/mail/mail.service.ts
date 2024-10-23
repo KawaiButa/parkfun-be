@@ -37,7 +37,7 @@ export class MailService {
         price: booking.amount,
         fee: booking.fee,
         total: booking.amount + booking.fee,
-        services: booking.services.map(({ name }) => ({ name, price: 0 })),
+        services: booking.services.map(({ name, description }) => ({ name, description, price: 0 })),
         receiptUrl: paymentRecord.receiptUrl,
         paymentUrl: `${this.configService.get("FRONTEND_URL")}/payment/${paymentRecord.id}`,
         startTime: dayjs(booking.startAt).format("dd-MM-YYYYY HH:mm a"),

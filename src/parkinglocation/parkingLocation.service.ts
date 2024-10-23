@@ -49,6 +49,7 @@ export class ParkingLocationService {
       priceStartAt = 0,
       priceEndAt = 10000,
       orderBy = "distance",
+      type,
       ...query
     } = searchParkingLocationDto;
     const { skip = 0, take = 20 } = pageOptionsDto;
@@ -77,7 +78,7 @@ export class ParkingLocationService {
         `parkingLocation.pricingOptionId AS "pricingOptionId"`,
         `parkingSlot.id AS "parkingSlotId"`,
         `image.url AS image`,
-        `parkingSlot.price AS "minPrice"`,
+        `parkingSlot.price AS "price"`,
       ])
       .addSelect(
         `earth_distance(ll_to_earth(parkingLocation.lat, parkingLocation.lng),ll_to_earth(:lat, :lng)) / 1000 AS distance`
@@ -132,7 +133,11 @@ export class ParkingLocationService {
       .andWhere("booking.startAt NOT BETWEEN :bookingStartAt AND :bookingEndAt", {
         bookingStartAt: startAt.toISOString(),
         bookingEndAt: endAt.toISOString(),
-      })
+      });
+
+    if (type) queryBuilder.andWhere("parkingSlot.typeId = :type", { type });
+
+    queryBuilder
       .andWhere("parkingSlot.length >= :length", { length })
       .andWhere("parkingSlot.height >= :height", { height })
       .andWhere("parkingSlot.height >= :width", { width })
@@ -154,6 +159,7 @@ export class ParkingLocationService {
       return map(groupedData, (group) => ({
         ...omit(group[0], "image"),
         images: uniq(group.map(({ image }) => image)),
+        minPrice: Math.min(...group.map(({ price }) => price)),
         parkingSlotIds: uniq(group.map(({ parkingSlotId }) => parkingSlotId)),
       })) as Array<ParkingLocation & { distance: number; minPrice: number; parkingSlotIds: number[] }>;
     };

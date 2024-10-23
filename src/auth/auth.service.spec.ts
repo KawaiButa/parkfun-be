@@ -26,6 +26,7 @@ describe("AuthService", () => {
       id: 1,
       name: "user",
     },
+    isVerified: true,
     phoneNumber: "testPhoneNumber",
   } as User;
 

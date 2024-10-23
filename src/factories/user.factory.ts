@@ -8,5 +8,6 @@ export default setSeederFactory(User, (faker) => {
   user.password = bcrypt.hashSync(faker.internet.password(), 10);
   user.phoneNumber = faker.phone.number();
   user.createAt = faker.date.past();
+  user.isVerified = true;
   return user;
 });

@@ -117,41 +117,39 @@
       <p>
         <strong>Parking Slot: </strong><%= parkingSlot %>
       </p>
-      <div class="booking-time">
         <p>
           <strong>Start Time: </strong><%= startTime %>
         </p>
         <p>
           <strong>End Time: </strong><%= endTime %>
         </p>
-      </div>
       <% if (services && services.length > 0) { %>
       <!-- Transaction Table -->
       <table class="table">
         <thead>
           <tr>
             <th>Service</th>
+            <th>Description</th>
             <th>Price</th>
-            <th>Quantity</th>
             <th>Total</th>
           </tr>
         </thead>
         <tbody><% services.forEach(item => { %> <tr>
             <td><%= item.name %> </td>
+            <td><%= item.description %></td>
             <td>$<%= item.price.toFixed(2) %> </td>
-            <td>1</td>
-            <td>$<%= (item.price * item.quantity).toFixed(2) %> </td>
+            <td>$<%= (item.price).toFixed(2) %> </td>
           </tr><% }) %>
         </tbody>
       </table>
       <% } else { %>
       <p>No service is selected.</p>
       <% } %>
-      <p class="fee">Fee: <%= fee %> </p>
+      <p class="fee">Fee: <%= fee.toFixed(2) %> </p>
       <p class="total">Total: $<%= total.toFixed(2) %> </p>
       <p>To view your full receipt, please scan the QR code below:</p>
       <div class="qr-container">
-        <img src="https://quickchart.io/qr?text=<%= encodeURIComponent(receiptUrl) %>&size=200" alt="QR Code">
+        <img src="https://quickchart.io/qr?text=<%= encodeURIComponent(paymentUrl) %>&size=200" alt="QR Code">
       </div>
       <p>Or click <a href="<%= receiptUrl %>" style="color: #EBCB00;">here </a> to view your receipt online. </p>
     </div>

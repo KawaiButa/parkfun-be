@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { BadRequestException, ConflictException, Inject, Injectable, NotFoundException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { BookingService } from "src/booking/booking.service";
 import { UserService } from "src/user/user.service";
@@ -11,6 +11,10 @@ import { SchedulerRegistry } from "@nestjs/schedule";
 import * as dayjs from "dayjs";
 import { ParkingSlotService } from "src/parkingSlot/parkingSlot.service";
 import { MailService } from "src/mail/mail.service";
+import { BookingDto } from "./dtos/booking.dto";
+import { Cache } from "cache-manager";
+import { CACHE_MANAGER } from "@nestjs/cache-manager";
+import { timeToSeconds } from "src/utils/utils";
 @Injectable()
 export default class StripePaymentService {
   private stripe: Stripe;
@@ -22,7 +26,8 @@ export default class StripePaymentService {
     private userService: UserService,
     private bookingService: BookingService,
     private parkingSlotService: ParkingSlotService,
-    private scheduleRegistry: SchedulerRegistry,
+    private schedulerRegistry: SchedulerRegistry,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
     private mailService: MailService
   ) {
     this.stripe = new Stripe(configService.get("STRIPE_SECRET_KEY"));
@@ -34,7 +39,7 @@ export default class StripePaymentService {
     });
   }
   async charge(booking: Booking) {
-    this.scheduleRegistry.addTimeout(
+    this.schedulerRegistry.addTimeout(
       "" + booking.parkingSlot.id + "_pending",
       setTimeout(
         () => {
@@ -74,13 +79,46 @@ export default class StripePaymentService {
       booking,
     };
   }
-
-  async complete(bookingId: number, event: Stripe.ChargeSucceededEvent) {
+  async booking(bookingDto: BookingDto, userId: number) {
+    try {
+      const { parkingSlotId, startAt, endAt } = bookingDto;
+      this.schedulerRegistry.getTimeout("" + parkingSlotId + "_pending");
+      const parkingSlot = await this.parkingSlotService.findOne(parkingSlotId);
+      if (!parkingSlot) throw new BadRequestException("No parking slot found");
+      if (!(parkingSlot.startAt <= timeToSeconds(dayjs(startAt)) && parkingSlot.endAt >= timeToSeconds(dayjs(endAt))))
+        throw new BadRequestException("Your selected time is not within the open time of the parking slot");
+      const booking = await this.bookingService.findOneBy({
+        parkingSlot: { id: bookingDto.parkingSlotId },
+        user: { id: userId },
+        status: BookingStatus.PENDING,
+      });
+      if (!booking) throw new ConflictException("Someone else has been booking this slot within your selected time.");
+      this.schedulerRegistry.deleteTimeout("" + bookingDto.parkingSlotId + "_pending");
+      await this.bookingService.update(booking.id, { status: BookingStatus.CANCELLED });
+    } catch (e) {
+      if (e instanceof ConflictException) throw e;
+    }
+    const [booking] = await Promise.all([
+      this.bookingService.create(bookingDto, userId),
+      this.parkingSlotService.update(bookingDto.parkingSlotId, {
+        isAvailable: false,
+      }),
+    ]);
+    const { session } = await this.charge(booking);
+    this.cacheManager.set(session.customer, booking.id, { ttl: 5 * 60 } as any);
+    return { clientSecret: session.client_secret };
+  }
+  async complete(event: Stripe.ChargeSucceededEvent) {
+    const bookingId = (await this.cacheManager.get(event.data.object.customer as string)) as number;
+    if (!bookingId) {
+      throw new NotFoundException("Invalid session ID");
+    }
+    this.cacheManager.del(event.data.object.customer as string);
     const booking = await this.bookingService.getOne(bookingId);
     const parkingSlot = booking.parkingSlot;
     const paymentRecord = this.paymentRecordRepository.create({
       booking: booking,
-      amount: booking.amount,
+      amount: booking.amount + booking.fee,
       isRefunded: event.data.object.refunded,
       receiptUrl: event.data.object.receipt_url,
       transactionId: event.data.object.id,
@@ -90,8 +128,8 @@ export default class StripePaymentService {
       status: BookingStatus.COMPLETED,
       payment: paymentRecord,
     });
-    this.scheduleRegistry.deleteTimeout(`${parkingSlot.id}_pending`);
-    this.scheduleRegistry.addTimeout(
+    this.schedulerRegistry.deleteTimeout(`${parkingSlot.id}_pending`);
+    this.schedulerRegistry.addTimeout(
       `${booking.id}_start`,
       setTimeout(
         () => {
@@ -102,7 +140,7 @@ export default class StripePaymentService {
         this.getMillisecondsBetweenDates(new Date(), booking.startAt)
       )
     );
-    this.scheduleRegistry.addTimeout(
+    this.schedulerRegistry.addTimeout(
       `${booking.id}_end`,
       setTimeout(
         () => {

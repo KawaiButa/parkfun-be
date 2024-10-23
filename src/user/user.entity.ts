@@ -49,6 +49,9 @@ export class User {
   @JoinColumn()
   partner: Partner;
 
+  @Column({ default: false, nullable: false })
+  isVerified: boolean;
+
   @OneToOne(() => Image, (image) => image.user, { cascade: true })
   @JoinColumn()
   image: Image;
