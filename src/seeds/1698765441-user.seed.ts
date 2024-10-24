@@ -24,10 +24,11 @@ export default class UserSeeder1698765441 implements Seeder {
     await userRepository.save(
       userRepository.create({
         name: "admin",
-        email: "admin@gmail.com",
-        password: bcrypt.hashSync("1234567890", 10),
+        email: process.env.ADMIN_ADDRESS,
+        password: bcrypt.hashSync(process.env.ADMIN_PASSWORD, 10),
         phoneNumber: "1234567890",
         role: adminRole,
+        isVerified: true,
       })
     );
     const [images, partners] = await Promise.all([imageRepository.find(), partnerRepository.find()]);

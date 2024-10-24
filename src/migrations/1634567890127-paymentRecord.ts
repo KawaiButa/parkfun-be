@@ -31,6 +31,11 @@ export class CreatePaymentRecord1634567890127 implements MigrationInterface {
             type: "varchar",
           },
           {
+            name: "status",
+            type: "enum",
+            enum: ["holding", "captured", "refunded", "failed"],
+          },
+          {
             name: "createAt",
             type: "timestamp",
             default: "CURRENT_TIMESTAMP",

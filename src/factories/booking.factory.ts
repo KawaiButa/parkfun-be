@@ -9,5 +9,11 @@ export default setSeederFactory(Booking, (faker) => {
   booking.startAt = faker.date.past();
   booking.endAt = faker.date.between({ from: booking.startAt, to: dayjs(booking.startAt).add(1, "day").toDate() });
   booking.createAt = faker.date.recent({ refDate: booking.startAt });
+  booking.status = faker.helpers.arrayElement([
+    BookingStatus.COMPLETED,
+    BookingStatus.CANCELLED,
+    BookingStatus.REJECTED,
+    BookingStatus.EXPIRED,
+  ]);
   return booking;
 });

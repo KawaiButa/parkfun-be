@@ -11,13 +11,13 @@ export default class PricingOptionSeeder1698765436 implements Seeder {
           name: "Percentage",
           value: 10,
           description:
-            "Lorem ipsum dolor sit amet consectetur adipisicing elit. Error voluptate facere delectus omnis est quae atque accusantium! Quasi, magni quos repellendus eum, vitae repudiandae eius, amet delectus voluptas at dicta.",
+            "Partner pays a percentage of the transaction amount or sale value. It is recommended for partners who have High-value transactions with varying amounts.",
         },
         {
           name: "Fixed",
           value: 5,
           description:
-            "Lorem ipsum dolor sit amet consectetur adipisicing elit. Consequatur, quos obcaecati, voluptate placeat minima quo quae, aliquam magni quia minus impedit. Quis amet distinctio nostrum officiis exercitationem porro, nobis debitis!",
+            "Partner pays a set amount regardless of transaction value. Consider this option When your costs are relatively constant",
         },
       ])
     );

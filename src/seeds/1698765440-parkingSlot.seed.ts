@@ -33,7 +33,7 @@ export default class ParkingSlot1698765440 implements Seeder {
               Math.floor(Math.random() * parkingServices.length)
             ) as ParkingService[];
             const image = take(shuffle(images), 4);
-            return parkingSlotFactory.saveMany(5 + Math.round(Math.random() * 5), {
+            return parkingSlotFactory.saveMany(10 + Math.round(Math.random() * 5), {
               parkingLocation: parkingLocation,
               type: parkingSlotTypes[0],
               isAvailable: true,

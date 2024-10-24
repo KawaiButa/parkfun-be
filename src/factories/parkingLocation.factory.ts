@@ -20,11 +20,9 @@ const generateVietnameseAddress = (faker: Faker): string => {
 
 export default setSeederFactory(ParkingLocation, (faker) => {
   const parkingLocation = new ParkingLocation();
-  parkingLocation.lat = faker.location.latitude({ min: 8.56, max: 23.39 });
-  parkingLocation.lng = faker.location.longitude({ min: 102.14, max: 109.46 });
-
+  parkingLocation.lat = faker.location.latitude({ min: 10.3485, max: 11.106, precision: 6 });
+  parkingLocation.lng = faker.location.longitude({ min: 106.3256, max: 107.012, precision: 6 });
   parkingLocation.address = generateVietnameseAddress(faker);
-
   parkingLocation.access = faker.commerce.productDescription();
   parkingLocation.name = faker.company.name();
   parkingLocation.description = faker.commerce.productDescription();

@@ -1,5 +1,16 @@
 import { MigrationInterface, QueryRunner, Table, TableForeignKey } from "typeorm";
-
+export enum BookingStatus {
+  PENDING = "pending",
+  COMPLETED = "completed",
+  CANCELLED = "cancelled",
+  HOLDING = "holding",
+  EXPIRED = "expired",
+  REFUNDED = "refunded",
+  ACCEPTED = "accepted",
+  REJECTED = "rejected",
+  BOOKING = "booking",
+  REQUEST_COMPLETE = "request_complete",
+}
 export class CreateBooking1634567890128 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.createTable(
@@ -24,7 +35,18 @@ export class CreateBooking1634567890128 implements MigrationInterface {
           {
             name: "status",
             type: "enum",
-            enum: ["pending", "completed", "cancelled"],
+            enum: [
+              "pending",
+              "completed",
+              "cancelled",
+              "holding",
+              "expired",
+              "refunded",
+              "accepted",
+              "rejected",
+              "booking",
+              "request_complete",
+            ],
             default: "'pending'",
           },
           {
