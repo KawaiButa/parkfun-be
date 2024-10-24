@@ -18,6 +18,13 @@ export enum BookingStatus {
   PENDING = "pending",
   COMPLETED = "completed",
   CANCELLED = "cancelled",
+  HOLDING = "holding",
+  EXPIRED = "expired",
+  REFUNDED = "refunded",
+  ACCEPTED = "accepted",
+  REJECTED = "rejected",
+  BOOKING = "booking",
+  REQUEST_COMPLETE = "request_complete",
 }
 @Entity()
 export class Booking {

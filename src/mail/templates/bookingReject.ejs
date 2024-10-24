@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      body {
+          font-family: 'Poppins', Arial, sans-serif;
+          line-height: 1.6;
+          color: #ffffff;
+          margin: 0;
+          padding: 0;
+          background-color: #181C14;
+      }
+      .container {
+          max-width: 600px;
+          margin: 0 auto;
+          padding: 20px;
+      }
+      .header {
+          background-color: #272624;
+          padding: 20px;
+          text-align: center;
+          border-bottom: 2px solid #3B3B3B;
+      }
+      .header h1 {
+          color: #EBCB00;
+          font-size: 2rem;
+          font-weight: 600;
+          margin: 0;
+      }
+      .rejection-banner {
+          background-color: #A04747;
+          color: #fff;
+          padding: 15px;
+          text-align: center;
+          border-radius: 5px 5px 0 0;
+          font-size: 1.2rem;
+          font-weight: 500;
+      }
+      .content {
+          padding: 20px;
+          background-color: #272624;
+          border-radius: 0 0 5px 5px;
+          margin-bottom: 20px;
+      }
+      .section {
+          background-color: #171616;
+          padding: 15px;
+          border-radius: 5px;
+          margin: 20px 0;
+      }
+      .section h3 {
+          color: #EBCB00;
+          font-size: 1.25rem;
+          font-weight: 600;
+          margin-top: 0;
+      }
+      .services-list {
+          list-style-type: none;
+          padding-left: 0;
+          margin: 0;
+      }
+      .services-list li {
+          padding: 8px 0;
+          border-bottom: 1px solid #3B3B3B;
+      }
+      .services-list li:last-child {
+          border-bottom: none;
+      }
+      p, li {
+        color: #fff
+      }
+      .reason-box {
+          background-color: #2E3266;
+          border-radius: 5px;
+          padding: 15px;
+          margin: 20px 0;
+      }
+      .footer {
+          text-align: center;
+          padding: 20px;
+          font-size: 0.75rem;
+          color: #9E9E9E;
+      }
+      strong {
+          color: #EBCB00;
+      }
+      .booking-id {
+          text-align: center;
+          font-size: 1.1rem;
+          color: #9E9E9E;
+          margin: 10px 0;
+      }
+      .alternative-suggestion {
+          background-color: #2E704A;
+          padding: 15px;
+          border-radius: 5px;
+          margin: 20px 0;
+      }
+      .search-button {
+          display: inline-block;
+          padding: 12px 24px;
+          background-color: #EBCB00;
+          color: #272624;
+          text-decoration: none;
+          border-radius: 5px;
+          margin: 20px 0;
+          font-weight: 500;
+          text-transform: uppercase;
+          font-size: 0.875rem;
+      }
+      .search-button:hover {
+          background-color: #EBD226;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>Booking Request Update</h1>
+      </div>
+
+      <div class="rejection-banner">
+        We could not accept your booking request
+      </div>
+
+      <div class="content">
+        <p>Dear <%= user.name %>,</p>
+
+        <p>
+          We regret to inform you that your parking booking request could not be
+          accepted at this time.
+        </p>
+
+        <div class="booking-id">Booking Request ID: #<%= bookingId %></div>
+
+        <div class="section">
+          <h3>Requested Booking Details:</h3>
+          <p><strong>Location: </strong> <%= parkingLocation %></p>
+          <p><strong>Parking Slot: </strong> <%= parkingSlot %></p>
+          <p><strong>Date: </strong> <%= bookingDate %></p>
+          <p><strong>Start Time: </strong> <%= startTime %></p>
+          <p><strong>End Time: </strong> <%= endTime %></p>
+        </div>
+
+        <div class="reason-box">
+          <h3>Reason for Rejection:</h3>
+          <p><%= rejectionReason %></p>
+        </div>
+
+        <center>
+          <a href="<%= searchUrl %>" class="search-button">
+            Search Other Parking Spaces
+          </a>
+        </center>
+
+        <p>
+          We understand this may be inconvenient for you. Here are some steps
+          you can take:
+        </p>
+        <ul>
+          <li>Try booking for a different time slot</li>
+          <li>Check availability at nearby parking locations</li>
+          <li>
+            Contact our support team for assistance in finding alternatives
+          </li>
+        </ul>
+      </div>
+
+      <div class="footer">
+        <p>We appreciate your understanding.</p>
+        <p>If you need assistance, our support team is here to help.</p>
+        <p>
+          &copy; <%= new Date().getFullYear() %> YourParkingApp. All rights
+          reserved.
+        </p>
+      </div>
+    </div>
+  </body>
+</html>

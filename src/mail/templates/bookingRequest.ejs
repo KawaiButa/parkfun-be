@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+      body {
+        font-family: 'Poppins', Arial, sans-serif;
+        line-height: 1.6;
+        color: #ffffff;
+        margin: 0;
+        padding: 0;
+        background-color: #181C14;
+      }
+
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+
+      p, li {
+        color: #fff
+      }
+
+      .header {
+        background-color: #272624;
+        padding: 20px;
+        text-align: center;
+        border-bottom: 2px solid #3B3B3B;
+      }
+
+      .header h1 {
+        color: #EBCB00;
+        font-size: 2rem;
+        font-weight: 600;
+        margin: 0;
+      }
+
+      .content {
+        padding: 20px;
+        background-color: #272624;
+        border-radius: 5px;
+        margin-top: 20px;
+      }
+
+      .section {
+        background-color: #171616;
+        padding: 15px;
+        border-radius: 5px;
+        margin: 20px 0;
+      }
+
+      .section h3 {
+        color: #EBCB00;
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-top: 0;
+      }
+
+      .services-list {
+        list-style-type: none;
+        padding-left: 0;
+        margin: 0;
+      }
+
+      .services-list li {
+        padding: 8px 0;
+        border-bottom: 1px solid #3B3B3B;
+      }
+
+      .services-list li:last-child {
+        border-bottom: none;
+      }
+
+      .cta-button {
+        display: inline-block;
+        padding: 12px 24px;
+        background-color: #EBCB00;
+        color: #272624;
+        text-decoration: none;
+        border-radius: 5px;
+        margin: 20px 0;
+        font-weight: 500;
+        text-transform: uppercase;
+        font-size: 0.875rem;
+      }
+
+      .cta-button:hover {
+        background-color: #EBD226;
+      }
+
+      .footer {
+        text-align: center;
+        padding: 20px;
+        font-size: 0.75rem;
+        color: #9E9E9E;
+      }
+
+      .footer .company-info {
+        font-size: 0.75rem;
+        margin-top: 20px;
+      }
+
+      .footer a {
+        color: #ebcb00;
+        text-decoration: none;
+      }
+
+      strong {
+        color: #EBCB00;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>New Parking Booking Request</h1>
+      </div>
+      <div class="content">
+        <p>Dear <%= partnerName %>, </p>
+        <p>You have received a new booking request for your parking space.</p>
+        <div class="section">
+          <h3>Booking Details:</h3>
+          <p>
+            <strong>Location: </strong><%= location %>
+          </p>
+          <p>
+            <strong>Date: </strong><%= bookingDate %>
+          </p>
+          <p>
+            <strong>Start Time: </strong><%= startTime %>
+          </p>
+          <p>
+            <strong>End Time: </strong><%= endTime %>
+          </p>
+        </div>
+        <div class="section">
+          <h3>Customer Information:</h3>
+          <p>
+            <strong>Name: </strong><%= user.name %>
+          </p>
+          <p>
+            <strong>Email: </strong><%= user.email %>
+          </p>
+          <p>
+            <strong>Phone: </strong><%= user.phoneNumber %>
+          </p>
+          <p>
+            <strong>Address: </strong><%= user.address %>
+          </p>
+        </div>
+        <div class="section">
+          <h3>Selected Services:</h3>
+          <ul class="services-list"><% services.forEach(function(service) { %> <li>
+              <strong><%= service.name %> </strong><% if (service.price) { %> - <%= service.price %><% } %>
+            </li><% }); %> </ul>
+        </div>
+        <p>Please review and process this booking request.</p>
+        <center>
+          <a href="<%= processingUrl %>" class="cta-button"> Process Booking Request </a>
+        </center>
+        <p>Note: This request will expire 30 minutes before the start time if no action is taken.</p>
+      </div>
+      <div class="footer">
+        <div style="text-align: center; color: #9e9e9e; font-size: 0.75rem; margin-top: 20px">
+          <p>© 2024 ParkFun. All rights reserved.</p>
+          <div style="font-size: 0.75rem; margin-top: 20px">
+            <p>
+              <strong>Golden Owl Solutions - Dedicated IT remote resource</strong>
+            </p>
+            <p>Tel: +84 79 7675 026</p>
+            <p>
+              <a href="https://goldenowl.asia/" target="_blank" data-saferedirecturl="https://www.google.com/url?q=https://goldenowl.asia/&amp;source=gmail&amp;ust=1729612957646000&amp;usg=AOvVaw05aWiOsXE78uLg6CxP6neV">Goldenowl.asia</a>| <a href="https://www.google.com/maps/place/Golden+Owl+Solutions/@10.7740064,106.7274952,15z/data=!4m6!3m5!1s0x3175279d5bd691d5:0x74994344dd00f5ae!8m2!3d10.7740064!4d106.7274952!16s%2Fg%2F11kp9ybrx1?entry=ttu" target="_blank" data-saferedirecturl="https://www.google.com/url?q=https://www.google.com/maps/place/Golden%2BOwl%2BSolutions/@10.7740064,106.7274952,15z/data%3D!4m6!3m5!1s0x3175279d5bd691d5:0x74994344dd00f5ae!8m2!3d10.7740064!4d106.7274952!16s%252Fg%252F11kp9ybrx1?entry%3Dttu&amp;source=gmail&amp;ust=1729612957646000&amp;usg=AOvVaw0MDTyRut-Kh_3MkmDE0QYV">C0013, Sarina Apt, 62 Hoang The Thien, An Loi Dong, Thu Duc city, HCMC, Vietnam</a>
+            </p>
+            <p>
+              <a href="https://www.linkedin.com/company/golden-owl-consulting/?viewAsMember=true" target="_blank" data-saferedirecturl="https://www.google.com/url?q=https://www.linkedin.com/company/golden-owl-consulting/?viewAsMember%3Dtrue&amp;source=gmail&amp;ust=1729612957646000&amp;usg=AOvVaw1qoiKgyostlYqckmQnYRPN">Linkedin</a>| <a href="https://www.facebook.com/goldenowl.asia" target="_blank" data-saferedirecturl="https://www.google.com/url?q=https://www.facebook.com/goldenowl.asia&amp;source=gmail&amp;ust=1729612957646000&amp;usg=AOvVaw19KhHFD5wj_RCyofCq30ug">Facebook</a>| <a href="https://twitter.com/goldenowlasia" target="_blank" data-saferedirecturl="https://www.google.com/url?q=https://twitter.com/goldenowlasia&amp;source=gmail&amp;ust=1729612957646000&amp;usg=AOvVaw3IxsiZDaV1CPgiQVuZiPpm">Twitter</a>
+            </p>
+          </div>
+        </div>
+        <p>This is an automated message. Please do not reply directly to this email.</p>
+        <p>&copy; <%= new Date().getFullYear() %> Parkfun. All rights reserved. </p>
+      </div>
+    </div>
+  </body>
+</html>

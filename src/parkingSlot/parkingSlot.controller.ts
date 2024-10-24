@@ -1,10 +1,11 @@
-import { Controller, Get, Post, Body, Param, Delete, UseGuards, Req, Query } from "@nestjs/common";
+import { Controller, Get, Post, Body, Param, Delete, UseGuards, Req, Query, Patch } from "@nestjs/common";
 import { ParkingSlotService } from "./parkingSlot.service";
 import { CreateParkingSlotDto } from "./dtos/createParkingSlot.dto";
 import { AuthGuard } from "@nestjs/passport";
 import RolesGuard from "src/role/role.guard";
 import { User } from "src/user/user.entity";
 import { PageOptionsDto } from "src/utils/dtos/pageOption.dto";
+import { UpdateParkingSlotDto } from "./dtos/updateParkingSlot.dto";
 
 @Controller("parking-slot")
 export class ParkingSlotController {
@@ -26,6 +27,11 @@ export class ParkingSlotController {
     return this.parkingSlotService.findAll(pageQuery, user.partner.id);
   }
 
+  @Patch(";id")
+  @UseGuards(AuthGuard("jwt"), RolesGuard("admin", "partner"))
+  update(@Param("id") id: string, @Body() updateParkingSlotDto: UpdateParkingSlotDto) {
+    return this.parkingSlotService.update(+id, updateParkingSlotDto);
+  }
   @Get(":id")
   @UseGuards(RolesGuard())
   findOne(@Param("id") id: string) {

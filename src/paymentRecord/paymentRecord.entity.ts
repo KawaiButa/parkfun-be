@@ -1,6 +1,12 @@
 import { Booking } from "src/booking/booking.entity";
 import { Column, CreateDateColumn, DeleteDateColumn, Entity, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 
+export enum PaymentRecordStatus {
+  HOLDING = "holding",
+  CAPTURED = "captured",
+  REFUNDED = "refunded",
+  FAILED = "failed",
+}
 @Entity()
 export class PaymentRecord {
   @PrimaryGeneratedColumn()
@@ -14,6 +20,9 @@ export class PaymentRecord {
 
   @OneToOne(() => Booking, (booking) => booking.payment)
   booking: Booking;
+
+  @Column()
+  status: PaymentRecordStatus;
 
   @Column()
   isRefunded: boolean;

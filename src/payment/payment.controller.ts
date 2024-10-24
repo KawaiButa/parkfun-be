@@ -8,7 +8,6 @@ import {
   Param,
   Post,
   Req,
-  UnauthorizedException,
   UseGuards,
 } from "@nestjs/common";
 import { BookingDto } from "./dtos/booking.dto";
@@ -30,9 +29,6 @@ export class PaymentController {
   @UseGuards(AuthGuard("jwt"), RolesGuard("user", "admin"))
   book(@Body() bookingDto: BookingDto, @Req() request: Request & { user: { id: number; role: string } }) {
     const { user } = request;
-    if (!user) {
-      throw new UnauthorizedException("You are not logged in");
-    }
     return this.paymentRecordService.booking(bookingDto, user.id);
   }
   @Post("/webhook")
@@ -41,7 +37,7 @@ export class PaymentController {
       throw new BadRequestException("Missing stripe-signature header");
     }
     const event = request.body as unknown as Stripe.Event;
-    if (event.type === "charge.succeeded") return this.paymentRecordService.complete(event);
+    if (event.type === "charge.succeeded") return this.paymentRecordService.completePayment(event);
 
     return event;
   }
@@ -56,13 +52,19 @@ export class PaymentController {
     @Req() request: Request & { user: { id: number; role: string } }
   ) {
     const { user } = request;
-    if (!user) {
-      throw new UnauthorizedException("You are not logged in");
-    }
-
     const booking = await this.bookingService.getOne(bookingId);
     if (booking.status !== BookingStatus.PENDING) throw new ConflictException("The booking is not pending");
     if (booking.user.id !== user.id) throw new ConflictException("You do not have permission to continue this booking");
     return this.paymentRecordService.charge(booking);
+  }
+  @Get("/:bookingId/complete")
+  @UseGuards(AuthGuard("jwt"), RolesGuard("partner", "admin"))
+  async completePayment(
+    @Param("bookingId") bookingId: number,
+    @Req() request: Request & { user: { id: number; role: string } }
+  ) {
+    const { user } = request;
+    const booking = await this.bookingService.acceptComplete(bookingId, user.id);
+    return this.paymentRecordService.capture(booking.payment.id);
   }
 }

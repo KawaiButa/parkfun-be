@@ -57,7 +57,7 @@ export class ParkingLocationService {
     const queryBuilder = this.parkingLocationRepository
       .createQueryBuilder("parkingLocation")
       .innerJoin("parkingLocation.parkingSlots", "parkingSlot", "parkingSlot.deleteAt IS NULL")
-      .innerJoin(Booking, "booking", "booking.parkingSlotId = parkingSlot.id")
+      .leftJoin(Booking, "booking", "booking.parkingSlotId = parkingSlot.id")
       .innerJoin("parkingSlot.services", "service")
       .innerJoinAndSelect("parkingLocation.images", "image", "image.deleteAt IS NULL")
       .innerJoin("parkingLocation.partner", "partner", "partner.deleteAt IS NULL")
@@ -97,73 +97,71 @@ export class ParkingLocationService {
         }
       );
     }
-    queryBuilder
-      .andWhere(
-        new Brackets((qb) => {
-          qb.where(" :startAt >= parkingSlot.startAt AND :endAt <= parkingSlot.endAt").orWhere(
-            new Brackets((qb2) => {
-              qb2
-                .where("parkingSlot.startAt > parkingSlot.endAt")
-                .andWhere(
-                  new Brackets((qb3) => {
-                    qb3.where(":startAt >= parkingSlot.startAt").orWhere(":startAt < parkingSlot.endAt");
-                  })
-                )
-                .andWhere(
-                  new Brackets((qb4) => {
-                    qb4.where(":endAt > parkingSlot.startAt").orWhere(":endAt <= parkingSlot.endAt");
-                  })
-                )
-                .andWhere(
-                  new Brackets((qb5) => {
-                    qb5
-                      .where(":startAt < :endAt")
-                      .orWhere(":startAt >= parkingSlot.startAt")
-                      .orWhere(":endAt <= parkingSlot.endAt");
-                  })
-                );
-            }),
-            {
-              startAt: this.timeToSeconds(dayjs(startAt)),
-              endAt: this.timeToSeconds(dayjs(startAt).add(24, "hours")),
-            }
-          );
-        })
-      )
-      .andWhere("booking.startAt NOT BETWEEN :bookingStartAt AND :bookingEndAt", {
-        bookingStartAt: startAt.toISOString(),
-        bookingEndAt: endAt.toISOString(),
-      });
+    queryBuilder.andWhere(
+      new Brackets((qb) => {
+        qb.where(" :startAt >= parkingSlot.startAt AND :endAt <= parkingSlot.endAt").orWhere(
+          new Brackets((qb2) => {
+            qb2
+              .where("parkingSlot.startAt > parkingSlot.endAt")
+              .andWhere(
+                new Brackets((qb3) => {
+                  qb3.where(":startAt >= parkingSlot.startAt").orWhere(":startAt < parkingSlot.endAt");
+                })
+              )
+              .andWhere(
+                new Brackets((qb4) => {
+                  qb4.where(":endAt > parkingSlot.startAt").orWhere(":endAt <= parkingSlot.endAt");
+                })
+              )
+              .andWhere(
+                new Brackets((qb5) => {
+                  qb5
+                    .where(":startAt < :endAt")
+                    .orWhere(":startAt >= parkingSlot.startAt")
+                    .orWhere(":endAt <= parkingSlot.endAt");
+                })
+              );
+          }),
+          {
+            startAt: this.timeToSeconds(dayjs(startAt)),
+            endAt: this.timeToSeconds(dayjs(endAt).add(24, "hours")),
+          }
+        );
+      })
+    );
+    // .andWhere("booking.startAt = NULL OR (booking.startAt NOT BETWEEN :bookingStartAt AND :bookingEndAt)", {
+    //   bookingStartAt: startAt.toISOString(),
+    //   bookingEndAt: endAt.toISOString(),
+    // });
 
     if (type) queryBuilder.andWhere("parkingSlot.typeId = :type", { type });
 
-    queryBuilder
-      .andWhere("parkingSlot.length >= :length", { length })
-      .andWhere("parkingSlot.height >= :height", { height })
-      .andWhere("parkingSlot.height >= :width", { width })
-      .andWhere("parkingSlot.price BETWEEN :priceStartAt AND :priceEndAt", {
-        priceStartAt: priceStartAt,
-        priceEndAt: priceEndAt,
-      })
-      .andWhere(filteredQuery)
-      .skip(skip)
-      .take(take)
-      .orderBy(orderBy, "ASC");
     queryBuilder.setParameters({
       lat,
       lng,
       radius,
     });
+    queryBuilder
+      .andWhere("parkingSlot.length >= :length", { length })
+      .andWhere("parkingSlot.height >= :height", { height })
+      .andWhere("parkingSlot.width >= :width", { width })
+      .andWhere("parkingSlot.price BETWEEN :priceStartAt AND :priceEndAt", {
+        priceStartAt: priceStartAt,
+        priceEndAt: priceEndAt,
+      })
+      .andWhere(filteredQuery)
+      .offset(skip)
+      .limit(take)
+      .orderBy(orderBy, "ASC");
     const combineParkedLocations = (data) => {
       const groupedData = groupBy(data, "id");
       return map(groupedData, (group) => ({
-        ...omit(group[0], "image"),
+        ...omit(group[0], "image", "price"),
         images: uniq(group.map(({ image }) => image)),
         minPrice: Math.min(...group.map(({ price }) => price)),
         parkingSlotIds: uniq(group.map(({ parkingSlotId }) => parkingSlotId)),
       })) as Array<ParkingLocation & { distance: number; minPrice: number; parkingSlotIds: number[] }>;
     };
-
     const data = await queryBuilder.getRawMany();
     const combinedData = combineParkedLocations(data);
     const itemCount = combinedData.length;

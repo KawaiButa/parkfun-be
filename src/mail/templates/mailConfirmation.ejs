@@ -38,7 +38,7 @@
       .button {
         display: inline-block;
         padding: 10px 20px;
-        background-color: #ebcb00; /* Match button with the header */
+        background-color: #ebcb00;
         color: #272624;
         text-decoration: none;
         border-radius: 5px;
@@ -51,6 +51,16 @@
         color: #9e9e9e;
         font-size: 0.75rem;
         margin-top: 20px;
+      }
+      .credentials-box {
+        background-color: #333;
+        padding: 15px;
+        border-radius: 5px;
+        margin: 20px 0;
+        border: 1px solid #ebcb00;
+      }
+      p, li {
+        color: #fff
       }
       .footer .company-info {
         font-size: 0.75rem;
@@ -65,22 +75,36 @@
   <body>
     <div class="container">
       <div class="header">
-        <h1>Email Confirmation</h1>
+        <h1><%= password ? 'Partner Registration' : 'Email Confirmation' %></h1>
       </div>
       <div class="content">
         <p>Hi <%= name %>,</p>
-        <p>
-          Welcome to ParkFun! 
-        </p>
-        <p>
+        
+        <% if (password) { %>
+          <p>Welcome to ParkFun as our valued partner!</p>
+          <p>
+            Thank you for choosing to partner with ParkFun. As a parking location provider, 
+            you'll be able to manage your parking spaces and connect with customers looking 
+            for convenient parking solutions.
+          </p>
+          <div class="credentials-box">
+            <p style="margin: 0"><strong>Your login credentials:</strong></p>
+            <p style="margin: 5px 0">Email: <%= email %></p>
+            <p style="margin: 0">Password: <%= password %></p>
+          </div>
+        <% } else { %>
+          <p>Welcome to ParkFun!</p>
+          <p>
             ParkFun helps you simplify the process of booking parking locations, especially during
-          peak hours. We aim to make the parking experience hassle-free and seamless for everyone.
-        </p>
+            peak hours. We aim to make the parking experience hassle-free and seamless for everyone.
+          </p>
+        <% } %>
+        
         <p>To complete your registration, please confirm your email address by clicking the button below:</p>
         <div class="button-container">
           <a href="<%= url %>" class="button">Confirm Email</a>
         </div>
-        <p>If you didn’t sign up for this service, please ignore this email.</p>
+        <p>If you didn't sign up for this service, please ignore this email.</p>
       </div>
       <div class="footer">
         <div style="text-align: center; color: #9e9e9e; font-size: 0.75rem; margin-top: 20px">
@@ -89,38 +113,15 @@
             <p><strong>Golden Owl Solutions - Dedicated IT remote resource</strong></p>
             <p>Tel: +84 79 7675 026</p>
             <p>
-              <a
-                href="https://goldenowl.asia/"
-                target="_blank"
-                data-saferedirecturl="https://www.google.com/url?q=https://goldenowl.asia/&amp;source=gmail&amp;ust=1729612957646000&amp;usg=AOvVaw05aWiOsXE78uLg6CxP6neV"
-                >Goldenowl.asia</a
-              >|
-              <a
-                href="https://www.google.com/maps/place/Golden+Owl+Solutions/@10.7740064,106.7274952,15z/data=!4m6!3m5!1s0x3175279d5bd691d5:0x74994344dd00f5ae!8m2!3d10.7740064!4d106.7274952!16s%2Fg%2F11kp9ybrx1?entry=ttu"
-                target="_blank"
-                data-saferedirecturl="https://www.google.com/url?q=https://www.google.com/maps/place/Golden%2BOwl%2BSolutions/@10.7740064,106.7274952,15z/data%3D!4m6!3m5!1s0x3175279d5bd691d5:0x74994344dd00f5ae!8m2!3d10.7740064!4d106.7274952!16s%252Fg%252F11kp9ybrx1?entry%3Dttu&amp;source=gmail&amp;ust=1729612957646000&amp;usg=AOvVaw0MDTyRut-Kh_3MkmDE0QYV"
-                >C0013, Sarina Apt, 62 Hoang The Thien, An Loi Dong, Thu Duc city, HCMC, Vietnam</a
-              >
+              <a href="https://goldenowl.asia/" target="_blank">Goldenowl.asia</a>|
+              <a href="https://www.google.com/maps/place/Golden+Owl+Solutions/@10.7740064,106.7274952,15z/data=!4m6!3m5!1s0x3175279d5bd691d5:0x74994344dd00f5ae!8m2!3d10.7740064!4d106.7274952!16s%2Fg%2F11kp9ybrx1?entry=ttu" target="_blank">
+                C0013, Sarina Apt, 62 Hoang The Thien, An Loi Dong, Thu Duc city, HCMC, Vietnam
+              </a>
             </p>
             <p>
-              <a
-                href="https://www.linkedin.com/company/golden-owl-consulting/?viewAsMember=true"
-                target="_blank"
-                data-saferedirecturl="https://www.google.com/url?q=https://www.linkedin.com/company/golden-owl-consulting/?viewAsMember%3Dtrue&amp;source=gmail&amp;ust=1729612957646000&amp;usg=AOvVaw1qoiKgyostlYqckmQnYRPN"
-                >Linkedin</a
-              >|
-              <a
-                href="https://www.facebook.com/goldenowl.asia"
-                target="_blank"
-                data-saferedirecturl="https://www.google.com/url?q=https://www.facebook.com/goldenowl.asia&amp;source=gmail&amp;ust=1729612957646000&amp;usg=AOvVaw19KhHFD5wj_RCyofCq30ug"
-                >Facebook</a
-              >|
-              <a
-                href="https://twitter.com/goldenowlasia"
-                target="_blank"
-                data-saferedirecturl="https://www.google.com/url?q=https://twitter.com/goldenowlasia&amp;source=gmail&amp;ust=1729612957646000&amp;usg=AOvVaw3IxsiZDaV1CPgiQVuZiPpm"
-                >Twitter</a
-              >
+              <a href="https://www.linkedin.com/company/golden-owl-consulting/?viewAsMember=true" target="_blank">Linkedin</a>|
+              <a href="https://www.facebook.com/goldenowl.asia" target="_blank">Facebook</a>|
+              <a href="https://twitter.com/goldenowlasia" target="_blank">Twitter</a>
             </p>
           </div>
         </div>

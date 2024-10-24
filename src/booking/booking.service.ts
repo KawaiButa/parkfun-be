@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
 import { FindOptionsWhere, Repository } from "typeorm";
 import { Booking, BookingStatus } from "./booking.entity";
 import { CreateBookingDto } from "./dtos/createBooking.dto";
@@ -13,6 +13,8 @@ import { SearchBookingDto } from "./dtos/searchBooking.dto";
 import { ParkingSlot } from "src/parkingSlot/parkingSlot.entity";
 import { ParkingLocation } from "src/parkinglocation/parkingLocation.entity";
 import * as dayjs from "dayjs";
+import { MailService } from "src/mail/mail.service";
+import { SchedulerRegistry } from "@nestjs/schedule";
 
 @Injectable()
 export class BookingService {
@@ -21,7 +23,9 @@ export class BookingService {
     private bookingRepository: Repository<Booking>,
     private userService: UserService,
     private parkingSlotService: ParkingSlotService,
-    private parkingServiceService: ParkingServiceService
+    private parkingServiceService: ParkingServiceService,
+    private mailService: MailService,
+    private schedulerRegistry: SchedulerRegistry
   ) {}
 
   async getAll(
@@ -56,7 +60,13 @@ export class BookingService {
       where: { id },
       relations: {
         user: true,
-        parkingSlot: true,
+        parkingSlot: {
+          parkingLocation: {
+            partner: {
+              user: true,
+            },
+          },
+        },
         services: true,
       },
     });
@@ -113,5 +123,126 @@ export class BookingService {
   }
   findOneBy(param: FindOptionsWhere<Booking>) {
     return this.bookingRepository.findOne({ where: param });
+  }
+  async acceptBooking(bookingId: number, userId: number) {
+    const booking = await this.getAuthorizedBooking({ bookingId, partnerId: userId, status: BookingStatus.HOLDING });
+    await this.bookingRepository.update(bookingId, { status: BookingStatus.ACCEPTED });
+    await this.mailService.sendBookingConfirm(booking);
+    //Set start and end timeout
+    this.schedulerRegistry.addTimeout(
+      `${bookingId}_start`,
+      setTimeout(
+        () => {
+          this.bookingRepository.update(booking.id, { status: BookingStatus.BOOKING });
+          this.parkingSlotService.update(booking.parkingSlot.id, {
+            isAvailable: false,
+          });
+        },
+        this.getMillisecondsBetweenDates(new Date(), booking.startAt)
+      )
+    );
+    this.schedulerRegistry.addTimeout(
+      `${bookingId}_end`,
+      setTimeout(
+        () => {
+          Promise.all([
+            this.bookingRepository.update(bookingId, { status: BookingStatus.COMPLETED }),
+            this.parkingSlotService.update(booking.parkingSlot.id, {
+              isAvailable: true,
+            }),
+          ]);
+        },
+        this.getMillisecondsBetweenDates(new Date(), booking.endAt)
+      )
+    );
+    return "You have successfully accepted the booking request with id " + bookingId;
+  }
+
+  async rejectBooking(bookingId: number, userId: number) {
+    const booking = await this.getAuthorizedBooking({ bookingId, partnerId: userId, status: BookingStatus.REJECTED });
+    await this.bookingRepository.update(bookingId, { status: BookingStatus.REJECTED });
+
+    await this.mailService.sendBookingReject(booking);
+    return "You have successfully the booking request with id " + bookingId;
+  }
+  async requestComplete(bookingId: number, userId: number) {
+    const booking = await this.bookingRepository.findOne({
+      where: {
+        id: bookingId,
+        user: {
+          id: userId,
+        },
+      },
+      relations: {
+        payment: true,
+        user: true,
+        parkingSlot: {
+          parkingLocation: {
+            partner: {
+              user: true,
+            },
+          },
+        },
+        services: true,
+      },
+    });
+    await this.bookingRepository.update(bookingId, { status: BookingStatus.REQUEST_COMPLETE });
+    this.mailService.sendCompleteBookingRequest(booking);
+    return booking;
+  }
+
+  async acceptComplete(bookingId: number, userId: number) {
+    const booking = await this.getAuthorizedBooking({ bookingId, partnerId: userId });
+    await this.bookingRepository.update(bookingId, { status: BookingStatus.COMPLETED });
+    return booking;
+  }
+  async getAuthorizedBooking({
+    bookingId,
+    userId,
+    partnerId,
+    status,
+  }: {
+    bookingId: number;
+    userId?: number;
+    partnerId?: number;
+    status?: BookingStatus;
+  }) {
+    const booking = await this.bookingRepository.findOne({
+      where: {
+        id: bookingId,
+        user: {
+          id: userId,
+        },
+        parkingSlot: {
+          parkingLocation: {
+            partner: {
+              user: {
+                id: partnerId,
+              },
+            },
+          },
+        },
+        status,
+      },
+      relations: {
+        user: true,
+        parkingSlot: {
+          parkingLocation: {
+            partner: {
+              user: true,
+            },
+          },
+        },
+        services: true,
+        payment: true,
+      },
+    });
+    if (!booking) throw new ForbiddenException("You are not allowed to modify this booking request anymore");
+    return booking;
+  }
+  getMillisecondsBetweenDates(date1, date2) {
+    const d1 = dayjs(date1);
+    const d2 = dayjs(date2);
+    return Math.abs(d2.diff(d1));
   }
 }

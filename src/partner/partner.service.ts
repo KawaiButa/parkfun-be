@@ -13,12 +13,18 @@ import { isKeyOf } from "src/utils/utils";
 import { PageMetaDto } from "src/utils/dtos/pageMeta.dto";
 import { SearchPartnerDto } from "./dto/searchPartner.dto";
 import { set } from "lodash";
+import { MailService } from "src/mail/mail.service";
+import { ConfigService } from "@nestjs/config";
+import { JwtService } from "@nestjs/jwt";
 @Injectable()
 export class PartnerService {
   constructor(
     @InjectRepository(Partner) private readonly partnerRepository: Repository<Partner>,
     private readonly partnerTypeService: PartnerTypeService,
     private readonly userService: UserService,
+    private readonly mailService: MailService,
+    private readonly configService: ConfigService,
+    private readonly jwtService: JwtService,
     private dataSource: DataSource
   ) {}
   async create(createPartnerDto: CreatePartnerDto) {
@@ -34,6 +40,14 @@ export class PartnerService {
         type: partnerType,
         user,
       });
+      const verificationToken = this.jwtService.sign(
+        { id: user.id, email: user.email },
+        {
+          secret: this.configService.get("MAIL_VERFICATION_SECRET"),
+          expiresIn: +this.configService.get("MAIL_VERFICATION_EXPIRES"),
+        }
+      );
+      await this.mailService.sendUserConfirmation(user, verificationToken, createPartnerDto.password);
       await this.partnerRepository.save(partner);
       return partner;
     } catch (err) {

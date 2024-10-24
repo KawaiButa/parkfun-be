@@ -1,3 +1,4 @@
+import { JwtService } from "@nestjs/jwt";
 import { Test, TestingModule } from "@nestjs/testing";
 import { PartnerService } from "./partner.service";
 import { getRepositoryToken } from "@nestjs/typeorm";
@@ -11,6 +12,8 @@ import { SearchPartnerDto } from "./dto/searchPartner.dto";
 import { PageOptionsDto } from "../utils/dtos/pageOption.dto";
 import { NotFoundException } from "@nestjs/common";
 import { Order } from "src/utils/enums";
+import { MailService } from "src/mail/mail.service";
+import { ConfigService } from "@nestjs/config";
 
 describe("PartnerService", () => {
   let service: PartnerService;
@@ -57,9 +60,23 @@ describe("PartnerService", () => {
     }),
   };
 
+  const mockJwtService = {
+    sign: jest.fn().mockReturnValue("mockJwtToken"),
+  };
+
+  const mockMailService = {
+    sendUserConfirmation: jest.fn().mockResolvedValue(true),
+  };
+  const mockConfigService = {
+    get: jest.fn().mockReturnValue("testConfigValue"),
+  };
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
+        {
+          provide: ConfigService,
+          useValue: mockConfigService,
+        },
         PartnerService,
         {
           provide: getRepositoryToken(Partner),
@@ -76,6 +93,14 @@ describe("PartnerService", () => {
         {
           provide: DataSource,
           useValue: mockDataSource,
+        },
+        {
+          provide: JwtService,
+          useValue: mockJwtService,
+        },
+        {
+          provide: MailService,
+          useValue: mockMailService,
         },
       ],
     }).compile();

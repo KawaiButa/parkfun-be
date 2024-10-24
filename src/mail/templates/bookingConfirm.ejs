@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      body {
+          font-family: 'Poppins', Arial, sans-serif;
+          line-height: 1.6;
+          color: #ffffff;
+          margin: 0;
+          padding: 0;
+          background-color: #181C14;
+      }
+      p, li, h3 {
+        color: #fff
+      }
+      .container {
+          max-width: 600px;
+          margin: 0 auto;
+          padding: 20px;
+      }
+      .header {
+          background-color: #272624;
+          padding: 20px;
+          text-align: center;
+          border-bottom: 2px solid #3B3B3B;
+      }
+      .header h1 {
+          color: #EBCB00;
+          font-size: 2rem;
+          font-weight: 600;
+          margin: 0;
+      }
+      .confirmation-banner {
+          background-color: #409760;
+          color: #fff;
+          padding: 15px;
+          text-align: center;
+          border-radius: 5px 5px 0 0;
+          font-size: 1.2rem;
+          font-weight: 500;
+      }
+      .content {
+          padding: 20px;
+          background-color: #272624;
+          border-radius: 0 0 5px 5px;
+          margin-bottom: 20px;
+      }
+      .section {
+          background-color: #171616;
+          padding: 15px;
+          border-radius: 5px;
+          margin: 20px 0;
+      }
+      .section h3 {
+          color: #EBCB00;
+          font-size: 1.25rem;
+          font-weight: 600;
+          margin-top: 0;
+      }
+      .services-list {
+          list-style-type: none;
+          padding-left: 0;
+          margin: 0;
+      }
+      .services-list li {
+          padding: 8px 0;
+          border-bottom: 1px solid #3B3B3B;
+      }
+      .services-list li:last-child {
+          border-bottom: none;
+      }
+      .qr-section {
+          text-align: center;
+          margin: 20px 0;
+      }
+      .qr-code {
+          background-color: #fff;
+          padding: 1px;
+          border-radius: 5px;
+          display: inline-block;
+      }
+      .footer {
+          text-align: center;
+          padding: 20px;
+          font-size: 0.75rem;
+          color: #9E9E9E;
+      }
+      strong {
+          color: #EBCB00;
+      }
+      .booking-id {
+          text-align: center;
+          font-size: 1.1rem;
+          color: #9E9E9E;
+          margin: 10px 0;
+      }
+      .footer .company-info {
+        font-size: 0.75rem;
+        margin-top: 20px;
+      }
+
+      .footer a {
+        color: #ebcb00;
+        text-decoration: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>Parking Booking Confirmed</h1>
+      </div>
+
+      <div class="confirmation-banner">Your booking has been accepted!</div>
+
+      <div class="content">
+        <p>Dear <%= user.name %>,</p>
+
+        <p>
+          Great news! Your parking booking has been confirmed. Here are your
+          booking details:
+        </p>
+
+        <div class="booking-id">Booking ID: #<%= bookingId %></div>
+
+        <div class="section">
+          <h3>Location Details:</h3>
+          <p><strong>Parking Location: </strong> <%= parkingLocation %></p>
+          <p><strong>Parking Slot: </strong> <%= parkingSlot %></p>
+        </div>
+
+        <div class="section">
+          <h3>Booking Time:</h3>
+          <p><strong>Date: </strong> <%= bookingDate %></p>
+          <p><strong>Start Time: </strong> <%= startTime %></p>
+          <p><strong>End Time: </strong> <%= endTime %></p>
+        </div>
+
+        <div class="section">
+          <h3>Selected Services: </h3>
+          <ul class="services-list">
+            <% services.forEach(function(service) { %>
+            <li>
+              <strong><%= service.name %> </strong>
+              <% if (service.price) { %> - <%= service.price %> <% } %>
+            </li>
+            <% }); %>
+          </ul>
+        </div>
+
+        <div class="qr-section">
+          <h3>Your Access QR Code</h3>
+          <div class="qr-code">
+            <img
+              src="https://quickchart.io/qr?text=<%= encodeURIComponent(bookingUrl) %>&size=150&margin=2&dark=171616"
+              alt="Access QR Code"
+            />
+          </div>
+          <p>
+            Please show this QR code when you arrive at the parking location.
+          </p>
+        </div>
+
+        <p>Important Notes:</p>
+        <ul>
+          <li>Please arrive on time for your booking</li>
+          <li>Keep this confirmation email for your records</li>
+          <li>
+            If you need to cancel or modify your booking, please do so at least
+            24 hours in advance
+          </li>
+        </ul>
+      </div>
+
+      <div class="footer">
+        <p>Thank you for choosing our service!</p>
+        <p>If you have any questions, please contact our support team.</p>
+        <div style="text-align: center; color: #9e9e9e; font-size: 0.75rem; margin-top: 20px">
+          <p>© 2024 ParkFun. All rights reserved.</p>
+          <div style="font-size: 0.75rem; margin-top: 20px">
+            <p>
+              <strong>Golden Owl Solutions - Dedicated IT remote resource</strong>
+            </p>
+            <p>Tel: +84 79 7675 026</p>
+            <p>
+              <a href="https://goldenowl.asia/" target="_blank" data-saferedirecturl="https://www.google.com/url?q=https://goldenowl.asia/&amp;source=gmail&amp;ust=1729612957646000&amp;usg=AOvVaw05aWiOsXE78uLg6CxP6neV">Goldenowl.asia</a>| <a href="https://www.google.com/maps/place/Golden+Owl+Solutions/@10.7740064,106.7274952,15z/data=!4m6!3m5!1s0x3175279d5bd691d5:0x74994344dd00f5ae!8m2!3d10.7740064!4d106.7274952!16s%2Fg%2F11kp9ybrx1?entry=ttu" target="_blank" data-saferedirecturl="https://www.google.com/url?q=https://www.google.com/maps/place/Golden%2BOwl%2BSolutions/@10.7740064,106.7274952,15z/data%3D!4m6!3m5!1s0x3175279d5bd691d5:0x74994344dd00f5ae!8m2!3d10.7740064!4d106.7274952!16s%252Fg%252F11kp9ybrx1?entry%3Dttu&amp;source=gmail&amp;ust=1729612957646000&amp;usg=AOvVaw0MDTyRut-Kh_3MkmDE0QYV">C0013, Sarina Apt, 62 Hoang The Thien, An Loi Dong, Thu Duc city, HCMC, Vietnam</a>
+            </p>
+            <p>
+              <a href="https://www.linkedin.com/company/golden-owl-consulting/?viewAsMember=true" target="_blank" data-saferedirecturl="https://www.google.com/url?q=https://www.linkedin.com/company/golden-owl-consulting/?viewAsMember%3Dtrue&amp;source=gmail&amp;ust=1729612957646000&amp;usg=AOvVaw1qoiKgyostlYqckmQnYRPN">Linkedin</a>| <a href="https://www.facebook.com/goldenowl.asia" target="_blank" data-saferedirecturl="https://www.google.com/url?q=https://www.facebook.com/goldenowl.asia&amp;source=gmail&amp;ust=1729612957646000&amp;usg=AOvVaw19KhHFD5wj_RCyofCq30ug">Facebook</a>| <a href="https://twitter.com/goldenowlasia" target="_blank" data-saferedirecturl="https://www.google.com/url?q=https://twitter.com/goldenowlasia&amp;source=gmail&amp;ust=1729612957646000&amp;usg=AOvVaw3IxsiZDaV1CPgiQVuZiPpm">Twitter</a>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

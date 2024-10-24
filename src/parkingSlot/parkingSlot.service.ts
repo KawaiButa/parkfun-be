@@ -63,9 +63,6 @@ export class ParkingSlotService {
         type: true,
         services: true,
         images: true,
-        parkingLocation: {
-          paymentMethod: true,
-        },
       },
       order: {
         [orderBy as keyof ParkingSlot]: order,

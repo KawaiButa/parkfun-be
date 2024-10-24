@@ -47,6 +47,7 @@ export class ParkingLocationController {
   }
 
   @Patch(":id")
+  @UseGuards(RolesGuard("admin", "partner"))
   update(@Param("id") id: string, @Body() updateParkingLocationDto: UpdateParkingLocationDto) {
     return this.parkingLocationService.update(+id, {
       ...updateParkingLocationDto,

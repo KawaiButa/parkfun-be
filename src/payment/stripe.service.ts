@@ -1,11 +1,11 @@
-import { BadRequestException, ConflictException, Inject, Injectable, NotFoundException } from "@nestjs/common";
+import { ConflictException, ForbiddenException, Inject, Injectable, NotFoundException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { BookingService } from "src/booking/booking.service";
 import { UserService } from "src/user/user.service";
 import Stripe from "stripe";
 import { Booking, BookingStatus } from "src/booking/booking.entity";
 import { InjectRepository } from "@nestjs/typeorm";
-import { PaymentRecord } from "../paymentRecord/paymentRecord.entity";
+import { PaymentRecord, PaymentRecordStatus } from "../paymentRecord/paymentRecord.entity";
 import { Repository } from "typeorm";
 import { SchedulerRegistry } from "@nestjs/schedule";
 import * as dayjs from "dayjs";
@@ -14,7 +14,6 @@ import { MailService } from "src/mail/mail.service";
 import { BookingDto } from "./dtos/booking.dto";
 import { Cache } from "cache-manager";
 import { CACHE_MANAGER } from "@nestjs/cache-manager";
-import { timeToSeconds } from "src/utils/utils";
 @Injectable()
 export default class StripePaymentService {
   private stripe: Stripe;
@@ -40,7 +39,7 @@ export default class StripePaymentService {
   }
   async charge(booking: Booking) {
     this.schedulerRegistry.addTimeout(
-      "" + booking.parkingSlot.id + "_pending",
+      "" + booking.id + "_pending",
       setTimeout(
         () => {
           this.bookingService.update(booking.id, { status: BookingStatus.CANCELLED });
@@ -52,6 +51,7 @@ export default class StripePaymentService {
     const { user } = booking;
     if (!user) throw new NotFoundException("You are not logged in");
     let customerId = user.stripeCustomerId;
+    this.cacheManager.set(customerId, booking.id, { ttl: 5 * 60 } as any);
     if (!customerId) {
       const customer = await this.createCustomer(user.name, user.email);
       await this.userService.update(user.id, { stripeCustomerId: customer.id });
@@ -63,7 +63,7 @@ export default class StripePaymentService {
         line_items: [
           {
             price_data: {
-              currency: "usd",
+              currency: this.configService.get("STRIPE_CURRENCY"),
               product_data: {
                 name: "parkfun-booking",
               },
@@ -75,40 +75,27 @@ export default class StripePaymentService {
         customer: customerId,
         mode: "payment",
         return_url: `${this.configService.get("FRONTEND_URL")}/home/payment/${booking.id}`,
+        payment_intent_data: {
+          capture_method: "manual",
+          description: `Booking for ${booking.parkingSlot.name} from ${dayjs(booking.startAt).format("YYYY-MM-DD HH:mm A")} to ${dayjs(booking.endAt).format("YYYY-MM-DD HH:mm A")}`,
+        },
       }),
       booking,
     };
   }
   async booking(bookingDto: BookingDto, userId: number) {
     try {
-      const { parkingSlotId, startAt, endAt } = bookingDto;
-      this.schedulerRegistry.getTimeout("" + parkingSlotId + "_pending");
-      const parkingSlot = await this.parkingSlotService.findOne(parkingSlotId);
-      if (!parkingSlot) throw new BadRequestException("No parking slot found");
-      if (!(parkingSlot.startAt <= timeToSeconds(dayjs(startAt)) && parkingSlot.endAt >= timeToSeconds(dayjs(endAt))))
-        throw new BadRequestException("Your selected time is not within the open time of the parking slot");
-      const booking = await this.bookingService.findOneBy({
-        parkingSlot: { id: bookingDto.parkingSlotId },
-        user: { id: userId },
-        status: BookingStatus.PENDING,
-      });
-      if (!booking) throw new ConflictException("Someone else has been booking this slot within your selected time.");
-      this.schedulerRegistry.deleteTimeout("" + bookingDto.parkingSlotId + "_pending");
-      await this.bookingService.update(booking.id, { status: BookingStatus.CANCELLED });
+      const { parkingSlotId } = bookingDto;
+      this.schedulerRegistry.getTimeout(`${parkingSlotId}_${bookingDto.startAt}_pending`);
     } catch (e) {
       if (e instanceof ConflictException) throw e;
     }
-    const [booking] = await Promise.all([
-      this.bookingService.create(bookingDto, userId),
-      this.parkingSlotService.update(bookingDto.parkingSlotId, {
-        isAvailable: false,
-      }),
-    ]);
+    const booking = await this.bookingService.create(bookingDto, userId);
     const { session } = await this.charge(booking);
-    this.cacheManager.set(session.customer, booking.id, { ttl: 5 * 60 } as any);
     return { clientSecret: session.client_secret };
   }
-  async complete(event: Stripe.ChargeSucceededEvent) {
+  async completePayment(event: Stripe.ChargeSucceededEvent) {
+    //Check if the user is booking the same parking slot
     const bookingId = (await this.cacheManager.get(event.data.object.customer as string)) as number;
     if (!bookingId) {
       throw new NotFoundException("Invalid session ID");
@@ -116,43 +103,77 @@ export default class StripePaymentService {
     this.cacheManager.del(event.data.object.customer as string);
     const booking = await this.bookingService.getOne(bookingId);
     const parkingSlot = booking.parkingSlot;
+    const paymentIndent = event.data.object.payment_intent;
+    let paymentIndentId;
+    if (typeof paymentIndent === "string") paymentIndentId = paymentIndent;
+    else paymentIndentId = paymentIndent.id;
+    //Change the payment record to hold status
     const paymentRecord = this.paymentRecordRepository.create({
       booking: booking,
       amount: booking.amount + booking.fee,
       isRefunded: event.data.object.refunded,
       receiptUrl: event.data.object.receipt_url,
-      transactionId: event.data.object.id,
+      transactionId: paymentIndentId,
+      status: PaymentRecordStatus.HOLDING,
     });
     await this.paymentRecordRepository.save(paymentRecord);
+    //Change the booking to hold status
     await this.bookingService.update(bookingId, {
-      status: BookingStatus.COMPLETED,
+      status: BookingStatus.HOLDING,
       payment: paymentRecord,
     });
-    this.schedulerRegistry.deleteTimeout(`${parkingSlot.id}_pending`);
+    //Delete pending timeout
+    this.schedulerRegistry.deleteTimeout(`${booking.id}_pending`);
+    //Start holding timeout - Timeout 30 minutes before booking.
     this.schedulerRegistry.addTimeout(
-      `${booking.id}_start`,
+      `${booking.id}_holding`,
       setTimeout(
         () => {
-          this.parkingSlotService.update(booking.parkingSlot.id, {
-            isAvailable: false,
-          });
+          this.bookingService.update(booking.id, { status: BookingStatus.CANCELLED });
         },
-        this.getMillisecondsBetweenDates(new Date(), booking.startAt)
+        this.getMillisecondsBetweenDates(new Date(), dayjs(booking.startAt).subtract(30, "minutes").toDate())
       )
     );
-    this.schedulerRegistry.addTimeout(
-      `${booking.id}_end`,
-      setTimeout(
-        () => {
-          this.parkingSlotService.update(booking.parkingSlot.id, {
-            isAvailable: true,
-          });
-        },
-        this.getMillisecondsBetweenDates(new Date(), booking.endAt)
-      )
-    );
-    await this.mailService.sendReceipt(paymentRecord);
+    await this.mailService.sendBookingRequest(booking, parkingSlot.parkingLocation.partner);
     return booking;
+  }
+  async refund(paymentRecordId: number) {
+    const paymentRecord = await this.paymentRecordRepository.findOne({ where: { id: paymentRecordId } });
+    if (!paymentRecord) throw new NotFoundException("Payment record not found");
+    if (paymentRecord.status === PaymentRecordStatus.CAPTURED) throw new ForbiddenException("Payment already captured");
+    if (paymentRecord.isRefunded) throw new ForbiddenException("Payment already refunded");
+    const refund = await this.stripe.paymentIntents.cancel(paymentRecord.transactionId);
+    paymentRecord.isRefunded = true;
+    await this.paymentRecordRepository.update(paymentRecordId, {
+      isRefunded: true,
+      status: PaymentRecordStatus.REFUNDED,
+    });
+    return refund;
+  }
+
+  async capture(paymentRecordId: number) {
+    const paymentRecord = await this.paymentRecordRepository.findOne({
+      where: { id: paymentRecordId },
+      relations: {
+        booking: {
+          user: true,
+          parkingSlot: {
+            parkingLocation: {
+              partner: true,
+            },
+          },
+          services: true,
+        },
+      },
+    });
+    if (!paymentRecord) throw new NotFoundException("Payment record not found");
+    if (paymentRecord.status === PaymentRecordStatus.CAPTURED) throw new ForbiddenException("Payment already captured");
+    if (paymentRecord.isRefunded) throw new ForbiddenException("Payment already refunded");
+    const capture = await this.stripe.paymentIntents.capture(paymentRecord.transactionId);
+    paymentRecord.status = PaymentRecordStatus.CAPTURED;
+    await this.paymentRecordRepository.update(paymentRecordId, { status: PaymentRecordStatus.CAPTURED });
+    this.mailService.sendReceipt(paymentRecord);
+    return capture;
   }
   getMillisecondsBetweenDates(date1, date2) {
     const d1 = dayjs(date1);

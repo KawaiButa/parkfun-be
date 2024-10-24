@@ -14,7 +14,7 @@ const option: DataSourceOptions & SeederOptions = {
   database: configService.get("DB_NAME"),
   migrations: ["dist/src/migrations/*{.ts,.js}"],
   entities: ["dist/src/**/*.entity.{js,ts}"],
-  seeds: ["dist/src/**/1698765442-booking.seed{.ts,.js}", "dist/src/**/1698765443-paymentRecord.seed{.ts,.js}"],
+  seeds: ["dist/src/**/*.seed{.ts,.js}"],
   factories: ["dist/src/factories/*{.ts,.js}"],
   ssl: { rejectUnauthorized: false },
 };
